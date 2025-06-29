@@ -71,3 +71,18 @@
 
 基于 [meteor-addon-template](https://github.com/MeteorDevelopment/meteor-addon-template) 开发。
 
+
+
+
+
+## 参考
+
+我参考或者借鉴了下面的这些， 感谢他们
+
+裤子条纹
+https://github.com/etianl/Trouser-Streak/releases
+jefff's mod
+https://github.com/miles352/meteor-stashhunting-addon/releases
+
+[sebseb7/autotrade-fabric: afk villager trading](https://github.com/sebseb7/autotrade-fabric)
+
