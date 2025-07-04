@@ -3,7 +3,8 @@
   "package": "com.github.mikumiku.addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "MikuMixin"
+    "MikuMixin",
+    "BlockESPMixin"
   ],
   "injectors": {
     "defaultRequire": 1
