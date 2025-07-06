@@ -2,9 +2,7 @@ package com.github.mikumiku.addon;
 
 import com.github.mikumiku.addon.commands.CommandMiku;
 import com.github.mikumiku.addon.hud.HudMiku;
-import com.github.mikumiku.addon.modules.AutoTrashModule;
-import com.github.mikumiku.addon.modules.ModuleExample;
-import com.github.mikumiku.addon.modules.PlayerAlert;
+import com.github.mikumiku.addon.modules.*;
 import lombok.extern.slf4j.Slf4j;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -28,6 +26,8 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new ModuleExample());
         modules.add(new PlayerAlert());
         modules.add(new AutoTrashModule());
+        modules.add(new LiquidFiller());
+//        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
 
 
         // Commands

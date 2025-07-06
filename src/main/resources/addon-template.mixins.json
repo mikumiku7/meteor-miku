@@ -3,8 +3,9 @@
   "package": "com.github.mikumiku.addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "MikuMixin",
-    "BlockESPMixin"
+    "BlockESPMixin",
+    "ClientPlayerEntity",
+    "MikuMixin"
   ],
   "injectors": {
     "defaultRequire": 1

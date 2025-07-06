@@ -90,19 +90,19 @@ public class AutoTrashModule extends Module {
     );
 
     private final Setting<List<Item>> group2Items = sgGroup2.add(new ItemListSetting.Builder()
-        .name("物品列表")
-        .description("垃圾组 2 中的物品")
-        .defaultValue(Arrays.asList(
-            Items.NETHERRACK,
-            Items.BLACKSTONE,
+            .name("物品列表")
+            .description("垃圾组 2 中的物品")
+            .defaultValue(Arrays.asList(
+                Items.NETHERRACK,
+                Items.BLACKSTONE,
 //            Items.COBBLESTONE,
-            Items.DIRT,
-            Items.GRAVEL,
-            Items.GRANITE,
-            Items.DIORITE,
-            Items.ANDESITE
-        ))
-        .build()
+                Items.DIRT,
+                Items.GRAVEL,
+                Items.GRANITE,
+                Items.DIORITE,
+                Items.ANDESITE
+            ))
+            .build()
     );
 
     // 垃圾组 3 设置

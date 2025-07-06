@@ -3,6 +3,7 @@ package com.github.mikumiku.addon.mixin;
 import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPChunk;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.FluidBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
@@ -23,7 +24,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public abstract class BlockESPMixin {
 
 
-    @Inject(method = "searchChunk", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "searchChunk",
+        at = @At("HEAD"), cancellable = true)
     private static void injectSearchChunk(Chunk chunk, List<Block> blocks, CallbackInfoReturnable<ESPChunk> cir) {
         ESPChunk schunk = new ESPChunk(chunk.getPos().x, chunk.getPos().z);
         if (schunk.shouldBeDeleted()) {
@@ -32,6 +34,7 @@ public abstract class BlockESPMixin {
         }
 
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
+        BlockPos playerPos = mc.player.getBlockPos();
 
         for (int x = chunk.getPos().getStartX(); x <= chunk.getPos().getEndX(); x++) {
             for (int z = chunk.getPos().getStartZ(); z <= chunk.getPos().getEndZ(); z++) {
@@ -46,6 +49,11 @@ public abstract class BlockESPMixin {
                         if (block instanceof FluidBlock) {
                             Integer level = bs.get(FluidBlock.LEVEL);
                             if (level != null && level == 0) {
+                                // 水源距离限制
+                                if (block == Blocks.WATER) {
+                                    double distanceSq = blockPos.getSquaredDistance(playerPos);
+                                    if (distanceSq > (64 * 64)) continue; // 跳过渲染
+                                }
                                 schunk.add(blockPos, false);
                             }
                         } else {

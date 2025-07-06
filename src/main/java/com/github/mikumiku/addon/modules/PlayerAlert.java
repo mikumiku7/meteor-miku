@@ -12,8 +12,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 
-
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +37,7 @@ enum SoundChoice {
  * 玩家提醒模块
  * 当有玩家进入设定范围时播放声音并发送聊天提醒
  */
-public class PlayerAlert extends Module {
+public class PlayerAlert extends MikuModule {
 
     // 用于跟踪已知玩家，避免重复提醒
     private final Set<String> knownPlayers = new HashSet<>();
