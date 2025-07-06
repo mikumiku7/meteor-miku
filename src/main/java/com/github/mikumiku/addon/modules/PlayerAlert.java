@@ -4,7 +4,6 @@ package com.github.mikumiku.addon.modules;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -15,29 +14,31 @@ import net.minecraft.sound.SoundEvents;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * 声音选择枚举
- */
-enum SoundChoice {
-    BELL(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value()),
-    BELL_USE(SoundEvents.BLOCK_BELL_USE),
-    DING(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value()),
-    WARNING(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value()),
-    ALERT(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP),
-    DANGER(SoundEvents.ENTITY_ENDERMAN_TELEPORT);
-
-    public final SoundEvent soundEvent;
-
-    SoundChoice(SoundEvent soundEvent) {
-        this.soundEvent = soundEvent;
-    }
-}
 
 /**
  * 玩家提醒模块
  * 当有玩家进入设定范围时播放声音并发送聊天提醒
  */
 public class PlayerAlert extends MikuModule {
+
+
+    /**
+     * 声音选择枚举
+     */
+    enum SoundChoice {
+        BELL(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value()),
+        BELL_USE(SoundEvents.BLOCK_BELL_USE),
+        DING(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value()),
+        WARNING(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value()),
+        ALERT(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP),
+        DANGER(SoundEvents.ENTITY_ENDERMAN_TELEPORT);
+
+        public final SoundEvent soundEvent;
+
+        SoundChoice(SoundEvent soundEvent) {
+            this.soundEvent = soundEvent;
+        }
+    }
 
     // 用于跟踪已知玩家，避免重复提醒
     private final Set<String> knownPlayers = new HashSet<>();
