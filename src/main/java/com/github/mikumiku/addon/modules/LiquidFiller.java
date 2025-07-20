@@ -134,7 +134,7 @@ public class LiquidFiller extends Module {
     private int timer;
 
     public LiquidFiller() {
-        super(MikuMikuAddon.CATEGORY, "liquid-filler-plus", "Places blocks inside of liquid source blocks within range of you.");
+        super(MikuMikuAddon.CATEGORY, "自动填水填海", "自动将方块放置在您范围内的水源方块内。");
     }
 
     @Override

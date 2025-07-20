@@ -1,6 +1,5 @@
 plugins {
     id("fabric-loom") version "1.10-SNAPSHOT"
-
     id("io.freefair.lombok") version "8.14"
 }
 
@@ -9,17 +8,29 @@ val versions = mapOf(
     "1.21.1" to mapOf(
         "minecraft" to "1.21.1",
         "yarn" to "1.21.1+build.3",
-        "meteor" to "0.5.8-SNAPSHOT"
+        "meteor" to "0.5.8-SNAPSHOT",
+        "loader" to "0.16.5"
     ),
     "1.21.4" to mapOf(
         "minecraft" to "1.21.4",
         "yarn" to "1.21.4+build.1",
-        "meteor" to "1.21.4-SNAPSHOT"
+        "meteor" to "1.21.4-SNAPSHOT",
+        "loader" to "0.16.5"
     )
 )
 
+// 获取当前构建的版本（从命令行参数或默认值）
+val currentMinecraftVersion = project.findProperty("minecraft_version")?.toString() ?: properties["minecraft_version"].toString()
+val currentVersionConfig = versions[currentMinecraftVersion] ?: versions["1.21.1"]!!
+
+// 动态设置版本相关的属性
+val dynamicMinecraftVersion = currentVersionConfig["minecraft"]!!
+val dynamicYarnMappings = currentVersionConfig["yarn"]!!
+val dynamicMeteorVersion = currentVersionConfig["meteor"]!!
+val dynamicLoaderVersion = currentVersionConfig["loader"]!!
+
 base {
-    archivesName = "${properties["archives_base_name"] as String}-${properties["minecraft_version"] as String}"
+    archivesName = "${properties["archives_base_name"] as String}-$currentMinecraftVersion"
     version = properties["mod_version"] as String
     group = properties["maven_group"] as String
 }
@@ -41,69 +52,63 @@ repositories {
 }
 
 dependencies {
-    // Fabric
-    minecraft("com.mojang:minecraft:${properties["minecraft_version"] as String}")
-    mappings("net.fabricmc:yarn:${properties["yarn_mappings"] as String}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${properties["loader_version"] as String}")
+    minecraft("com.mojang:minecraft:$dynamicMinecraftVersion")
+    mappings("net.fabricmc:yarn:$dynamicYarnMappings:v2")
+    modImplementation("net.fabricmc:fabric-loader:$dynamicLoaderVersion")
 
-    // 根据版本选择不同的meteor依赖
-    val mcVersion = properties["minecraft_version"] as String
-    if (mcVersion == "1.21.1") {
-    modImplementation("meteordevelopment:meteor-client:${properties["meteor_version"] as String}")
-    } else {
-        modImplementation("meteordevelopment:meteor-client:${mcVersion}-SNAPSHOT")
-    }
+    // 使用配置中定义的meteor版本
+    modImplementation("meteordevelopment:meteor-client:$dynamicMeteorVersion")
 
-    modCompileOnly("meteordevelopment:baritone:${properties["minecraft_version"] as String}-SNAPSHOT")
-//    compileOnly("org.projectlombok:lombok:1.18.38")
-//    annotationProcessor("org.projectlombok:lombok:1.18.38")
-
+    modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
 }
 
-// 创建多版本构建任务
+// 为每个版本创建构建任务
 versions.forEach { (versionName, config) ->
-    val taskSuffix = versionName.replace(".", "")
+    val taskName = "buildFor${versionName.replace(".", "")}"
 
-    // 创建专用的jar任务
-    val jarTask = tasks.register<Jar>("jar$taskSuffix") {
+    tasks.register(taskName, Exec::class) {
         group = "build"
         description = "Build jar for Minecraft $versionName"
 
-        archiveBaseName.set("${properties["archives_base_name"]}-${config["minecraft"]}")
-        archiveVersion.set(properties["mod_version"] as String)
+        workingDir = projectDir
 
-        from(sourceSets.main.get().output)
-
-        from("LICENSE") {
-            rename { "${it}_${archiveBaseName.get()}" }
+        // 根据操作系统选择命令
+        if (System.getProperty("os.name").lowercase().contains("windows")) {
+            commandLine("cmd", "/c", "gradlew.bat", "clean", "build", "-x", "test", "--no-configuration-cache", "-Pminecraft_version=$versionName")
+        } else {
+            commandLine("./gradlew", "clean", "build", "-x", "test", "--no-configuration-cache", "-Pminecraft_version=$versionName")
         }
 
-        // 动态设置依赖配置
-        doFirst {
-            // 这里可以添加版本特定的处理逻辑
-        }
-    }
+        // 构建完成后复制jar文件到版本特定的目录
+        doLast {
+            val buildLibsDir = file("build/libs")
+            val versionDir = file("build/versions/$versionName")
+            versionDir.mkdirs()
 
-    // 创建构建任务
-    tasks.register("build$taskSuffix") {
-        group = "build"
-        description = "Build for Minecraft $versionName"
-        dependsOn(jarTask)
+            buildLibsDir.listFiles()?.forEach { jarFile ->
+                if (jarFile.name.endsWith(".jar") && !jarFile.name.contains("sources")) {
+                    val targetFile = File(versionDir, jarFile.name)
+                    jarFile.copyTo(targetFile, overwrite = true)
+                    println("Copied ${jarFile.name} to ${targetFile.absolutePath}")
+                }
+            }
+        }
     }
 }
 
-// 构建所有版本的任务
+// 创建构建所有版本的任务
 tasks.register("buildAll") {
     group = "build"
-    description = "Build all versions"
-    dependsOn("build1211", "build1214")
+    description = "Build jars for all Minecraft versions"
+
+    dependsOn(versions.keys.map { "buildFor${it.replace(".", "")}" })
 }
 
 tasks {
     processResources {
         val propertyMap = mapOf(
-            "version" to project.version,
-            "mc_version" to project.property("minecraft_version"),
+            "version" to version,
+            "mc_version" to currentMinecraftVersion,
         )
 
         inputs.properties(propertyMap)
@@ -116,10 +121,9 @@ tasks {
     }
 
     jar {
-        inputs.property("archivesName", project.base.archivesName.get())
-
+        val archiveName = base.archivesName.get()
         from("LICENSE") {
-            rename { "${it}_${inputs.properties["archivesName"]}" }
+            rename { "${it}_$archiveName" }
         }
     }
 

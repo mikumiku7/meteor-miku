@@ -27,6 +27,8 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new PlayerAlert());
         modules.add(new AutoTrashModule());
         modules.add(new LiquidFiller());
+        modules.add(new AutoSandMiner());
+        modules.add(new AutoUseItems());
 //        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
 
 
@@ -35,6 +37,7 @@ public class MikuMikuAddon extends MeteorAddon {
 
         // HUD
         Hud.get().register(HudMiku.INFO);
+
     }
 
     @Override

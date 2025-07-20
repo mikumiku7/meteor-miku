@@ -13,7 +13,7 @@ public class CommandMiku extends Command {
      * The {@code name} parameter should be in kebab-case.
      */
     public CommandMiku() {
-        super("miku", "Sends a message.");
+        super("miku", "miku plugin");
     }
 
     @Override

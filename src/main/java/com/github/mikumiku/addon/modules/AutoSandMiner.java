@@ -122,7 +122,7 @@ public class AutoSandMiner extends Module {
     private BlockPos currentTarget = null;
 
     public AutoSandMiner() {
-        super(MikuMikuAddon.CATEGORY, "auto-sand-miner", "自动挖沙模块，支持背包管理和工具更换");
+        super(MikuMikuAddon.CATEGORY, "自动挖沙", "自动挖沙模块，支持背包管理和工具更换");
     }
 
     @Override

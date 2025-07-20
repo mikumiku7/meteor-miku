@@ -132,7 +132,7 @@ public class AutoTrashModule extends Module {
     private Set<Item> allTrashItems = new HashSet<>();
 
     public AutoTrashModule() {
-        super(MikuMikuAddon.CATEGORY, "auto-trash", "自动丢弃库存中的垃圾物品");
+        super(MikuMikuAddon.CATEGORY, "自动扔垃圾", "自动丢弃背包中的垃圾物品");
     }
 
     @Override
