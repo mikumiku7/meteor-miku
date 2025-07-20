@@ -9,18 +9,25 @@ val versions = mapOf(
         "minecraft" to "1.21.1",
         "yarn" to "1.21.1+build.3",
         "meteor" to "0.5.8-SNAPSHOT",
-        "loader" to "0.16.5"
+        "loader" to "0.16.5",
+        "xaeroplus_version" to "2.27.2+fabric-1.21.1",
+        "xaeros_worldmap_version" to "1.39.12_Fabric_1.21",
+        "xaeros_minimap_version" to "25.2.10_Fabric_1.21"
     ),
     "1.21.4" to mapOf(
         "minecraft" to "1.21.4",
         "yarn" to "1.21.4+build.1",
         "meteor" to "1.21.4-SNAPSHOT",
-        "loader" to "0.16.5"
+        "loader" to "0.16.5",
+        "xaeroplus_version" to "2.27.2+fabric-1.21.4",
+        "xaeros_worldmap_version" to "1.39.12_Fabric_1.21.4",
+        "xaeros_minimap_version" to "25.2.10_Fabric_1.21.4"
     )
 )
 
 // 获取当前构建的版本（从命令行参数或默认值）
-val currentMinecraftVersion = project.findProperty("minecraft_version")?.toString() ?: properties["minecraft_version"].toString()
+val currentMinecraftVersion =
+    project.findProperty("minecraft_version")?.toString() ?: properties["minecraft_version"].toString()
 val currentVersionConfig = versions[currentMinecraftVersion] ?: versions["1.21.1"]!!
 
 // 动态设置版本相关的属性
@@ -28,6 +35,9 @@ val dynamicMinecraftVersion = currentVersionConfig["minecraft"]!!
 val dynamicYarnMappings = currentVersionConfig["yarn"]!!
 val dynamicMeteorVersion = currentVersionConfig["meteor"]!!
 val dynamicLoaderVersion = currentVersionConfig["loader"]!!
+val xaeroplus_version = currentVersionConfig["xaeroplus_version"]!!
+val xaeros_worldmap_version = currentVersionConfig["xaeros_worldmap_version"]!!
+val xaeros_minimap_version = currentVersionConfig["xaeros_minimap_version"]!!
 
 base {
     archivesName = "${properties["archives_base_name"] as String}-$currentMinecraftVersion"
@@ -36,6 +46,18 @@ base {
 }
 
 repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = uri("https://api.modrinth.com/maven")
+            }
+        }
+        filter {
+            includeGroup("maven.modrinth")
+        }
+    }
+
     maven {
         name = "meteor-maven"
         url = uri("https://maven.meteordev.org/releases")
@@ -62,7 +84,16 @@ dependencies {
     // 使用配置中定义的meteor版本
     modImplementation("meteordevelopment:meteor-client:$dynamicMeteorVersion")
 
+    // XaeroPlus https://modrinth.com/mod/xaeroplus/version/2.27.2+fabric-1.21.1
+    modImplementation("maven.modrinth:xaeroplus:${xaeroplus_version}")
+    // XaeroWorldMap https://modrinth.com/mod/xaeros-world-map/version/1.39.12_Fabric_1.21
+    //               https://modrinth.com/mod/xaeros-world-map/version/1.39.12_Fabric_1.21.4
+    modImplementation("maven.modrinth:xaeros-world-map:${xaeros_worldmap_version}")
+    // XaeroMinimap https://modrinth.com/mod/xaeros-minimap/version/25.2.10_Fabric_1.21
+    modImplementation("maven.modrinth:xaeros-minimap:${xaeros_minimap_version}")
+
     modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
+
 
 
     extraLibs("dev.duti.acheong:cubiomes:1.22.5") { isTransitive = false }
@@ -94,9 +125,27 @@ versions.forEach { (versionName, config) ->
 
         // 根据操作系统选择命令
         if (System.getProperty("os.name").lowercase().contains("windows")) {
-            commandLine("cmd", "/c", "gradlew.bat", "clean", "build", "-x", "test", "--no-configuration-cache", "-Pminecraft_version=$versionName")
+            commandLine(
+                "cmd",
+                "/c",
+                "gradlew.bat",
+                "clean",
+                "build",
+                "-x",
+                "test",
+                "--no-configuration-cache",
+                "-Pminecraft_version=$versionName"
+            )
         } else {
-            commandLine("./gradlew", "clean", "build", "-x", "test", "--no-configuration-cache", "-Pminecraft_version=$versionName")
+            commandLine(
+                "./gradlew",
+                "clean",
+                "build",
+                "-x",
+                "test",
+                "--no-configuration-cache",
+                "-Pminecraft_version=$versionName"
+            )
         }
 
         // 构建完成后复制jar文件到版本特定的目录
@@ -167,9 +216,11 @@ sourceSets {
 tasks {
     processResources {
 
-        val versionConstantsFile = File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/VersionConstants.java")
+        val versionConstantsFile =
+            File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/VersionConstants.java")
         versionConstantsFile.parentFile.mkdirs()
-        versionConstantsFile.writeText("""
+        versionConstantsFile.writeText(
+            """
 package com.github.mikumiku.addon;
 
 public final class VersionConstants {
@@ -177,7 +228,8 @@ public final class VersionConstants {
     public static final boolean IS_1_21_1 = "1.21.1".equals(MINECRAFT_VERSION);
     public static final boolean IS_1_21_4 = "1.21.4".equals(MINECRAFT_VERSION);
 }
-    """.trimIndent())
+    """.trimIndent()
+        )
 
 
         val propertyMap = mapOf(
