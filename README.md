@@ -11,7 +11,7 @@
 
 ## ✨ 功能模块
 
-我们会不断添加新的模块，目前已实现的功能如下：
+会不断添加新的模块中，目前的功能如下：
 
 ### **Auto Trash (自动扔垃圾)**
 - **功能**: 自动丢弃您库存中指定的物品。
@@ -20,20 +20,30 @@
     - **自定义延迟**: 可自由调整丢弃物品的频率，防止操作过快。
     - **一键开关**: 在 GUI 中轻松启用或禁用。
 
----
-*(这里是未来新模块的位置，您可以按照以上格式继续添加)*
-
-### **(示例) New Module (新模块)**
-- **功能**: 模块功能的简短介绍。
+### **Auto Sand Miner (自动挖沙)**
+- **功能**: 智能自动挖沙，集成背包管理和工具维护功能。
 - **特点**:
-    - 特点一
-    - 特点二
+    - **智能挖掘**: 使用 Baritone 自动寻找并挖掘沙子
+    - **背包管理**: 背包满时自动前往指定潜影盒存放沙子
+    - **工具维护**: 铲子耐久度低时自动更换新工具
+    - **自动返回**: 完成存储或换工具后自动返回挖掘位置
+    - **可配置设置**: 自定义挖掘范围、延迟、潜影盒位置等
+
+### **Auto Use Items (自动使用物品)**
+- **功能**: 自动使用指定物品，支持多种使用模式和条件触发。
+- **特点**:
+    - **定时触发**: 定时自动使用物品
+    - **智能触发**: 根据生命值、饥饿值等条件自动使用物品
+    - **物品优先级**: 可设置多个物品的使用优先级
+    - **使用延迟**: 防止过快使用物品导致浪费
+    - **条件设置**: 支持血量阈值、饥饿值阈值等多种触发条件
+    - **快捷栏管理**: 自动从背包补充快捷栏中的消耗品
 
 ---
 
 ## 🛠️ 安装
 
-1.  前往本项目的 **[Releases](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY/releases)** 页面。 (请将链接替换为您自己的)
+1.  前往本项目的 **[Releases](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY/releases)** 页面。 
 2.  下载最新版本的 `.jar` 文件。
 3.  将下载的 `.jar` 文件放入您 Minecraft 游戏目录下的 `mods` 文件夹。
 4.  确保您已经安装了 Meteor Client 和 Fabric Loader。
@@ -49,7 +59,7 @@
 
 目前，本插件的所有模块界面和描述 **仅支持中文**。
 
-如果没用显示文字, 请安装 [xingke0/meteor_chinese: 为 meteor客户端 提供中文支持](https://github.com/xingke0/meteor_chinese)
+如果没显示文字, 请安装 [xingke0/meteor_chinese: 为 meteor客户端 提供中文支持](https://github.com/xingke0/meteor_chinese)
 
 ## 🤝 如何贡献 (Contributing)
 
@@ -77,7 +87,7 @@
 
 ## 参考
 
-我参考或者借鉴了下面的这些， 感谢他们
+参考或者借鉴了下面的这些， 感谢他们
 
 裤子条纹
 https://github.com/etianl/Trouser-Streak/releases
@@ -86,3 +96,12 @@ https://github.com/miles352/meteor-stashhunting-addon/releases
 
 [sebseb7/autotrade-fabric: afk villager trading](https://github.com/sebseb7/autotrade-fabric)
 
+https://github.com/AntiCope/meteor-rejects
+
+https://github.com/xingke0/meteor_chinese
+
+https://anticope.pages.dev/addons/
+
+https://github.com/JFronny/MeteorAdditions
+
+https://github.com/RedCarlos26/HIGTools
