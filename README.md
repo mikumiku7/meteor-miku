@@ -9,6 +9,11 @@
 
 本插件包完全免费，所有模块均以实用和便利为目标，请合理使用。
 
+
+## QQ群
+
+1013297171
+
 ## ✨ 功能模块
 
 会不断添加新的模块中，目前的功能如下：
@@ -43,7 +48,7 @@
 
 ## 🛠️ 安装
 
-1.  前往本项目的 **[Releases](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY/releases)** 页面。 
+1.  前往本项目的 **[Releases](https://github.com/mikumiku7/meteor-miku/releases)** 页面。 
 2.  下载最新版本的 `.jar` 文件。
 3.  将下载的 `.jar` 文件放入您 Minecraft 游戏目录下的 `mods` 文件夹。
 4.  确保您已经安装了 Meteor Client 和 Fabric Loader。

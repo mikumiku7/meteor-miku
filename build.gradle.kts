@@ -19,6 +19,11 @@ repositories {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
+
+    maven {
+        name = "maven3"
+        url = uri("https://maven.seedfinding.com/")
+    }
 }
 
 dependencies {
@@ -30,6 +35,8 @@ dependencies {
     // Meteor
     modImplementation("meteordevelopment:meteor-client:${properties["minecraft_version"] as String}-SNAPSHOT")
 
+
+    modCompileOnly ( "meteordevelopment:baritone:${properties["minecraft_version"] as String}-SNAPSHOT")
 //    compileOnly("org.projectlombok:lombok:1.18.38")
 //    annotationProcessor("org.projectlombok:lombok:1.18.38")
 }
