@@ -1,5 +1,7 @@
 # Meteor Addon Miku (彗星插件)
 
+[English](README_EN.md) | 中文
+
 这是一个为 [Meteor Client](https://meteorclient.com/) 设计的插件，旨在通过添加一系列实用、增强或自动化功能的模块来扩展 Meteor Client 的能力。
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.21.x%20~%201.21-green.svg?style=for-the-badge&logo=minecraft)
