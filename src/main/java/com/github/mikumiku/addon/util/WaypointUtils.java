@@ -5,6 +5,7 @@ import xaero.hud.minimap.BuiltInHudModules;
 import xaero.hud.minimap.module.MinimapSession;
 import xaero.hud.minimap.waypoint.set.WaypointSet;
 import xaero.hud.minimap.world.MinimapWorld;
+import xaero.map.mods.SupportMods;
 
 public class WaypointUtils {
 
@@ -32,6 +33,9 @@ public class WaypointUtils {
             false);
 
         waypointSet.add(waypoint);
+
+        SupportMods.xaeroMinimap.requestWaypointsRefresh();
+
     }
 
     public static Waypoint getWaypointByCoordinate(int x, int z) {
