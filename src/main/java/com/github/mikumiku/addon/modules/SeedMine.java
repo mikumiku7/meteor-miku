@@ -37,18 +37,11 @@ public class SeedMine extends Module {
     private Map<RegistryKey<Biome>, List<Ore>> oreConfig;
     public List<BlockPos> oreGoals = new ArrayList<>();
 
-    public enum AirCheck {
-        ON_LOAD,
-        RECHECK,
-        OFF
-    }
-
-
     private final SettingGroup sgSeed = settings.createGroup("种子设置");
     private final Setting<String> seedInput = sgSeed.add(new StringSetting.Builder()
         .name("种子")
-        .description("输入世界种子")
-        .defaultValue("")
+        .description("输入世界种子。（默认值为3C3U种子）")
+        .defaultValue("-7346913998703726680")
         .build()
     );
 
@@ -76,13 +69,6 @@ public class SeedMine extends Module {
         .defaultValue(5)
         .min(1)
         .sliderMax(10)
-        .build()
-    );
-
-    private final Setting<AirCheck> airCheck = sgGeneral.add(new EnumSetting.Builder<AirCheck>()
-        .name("空气检查模式")
-        .description("检查计算出的矿物位置是否有空气。")
-        .defaultValue(AirCheck.RECHECK)
         .build()
     );
 
@@ -144,7 +130,7 @@ public class SeedMine extends Module {
 
     @EventHandler
     private void onBlockUpdate(BlockUpdateEvent event) {
-        if (airCheck.get() != AirCheck.RECHECK || event.newState.isOpaque()) return;
+        if (event.newState.isOpaque()) return;
 
         long chunkKey = ChunkPos.toLong(event.pos);
         if (chunkRenderers.containsKey(chunkKey)) {
@@ -432,7 +418,7 @@ public class SeedMine extends Module {
                                         if (!bitSet.get(an)) {
                                             bitSet.set(an);
                                             mutable.set(ah, aj, al);
-                                            if (aj >= -64 && aj < 320 && (airCheck.get() == AirCheck.OFF || world.getBlockState(mutable).isOpaque())) {
+                                            if (aj >= -64 && aj < 320 && (world.getBlockState(mutable).isOpaque())) {
                                                 if (shouldPlace(world, mutable, discardOnAir, random)) {
                                                     poses.add(new Vec3d(ah, aj, al));
                                                 }
@@ -474,7 +460,7 @@ public class SeedMine extends Module {
             int x = this.randomCoord(random, size) + blockPos.getX();
             int y = this.randomCoord(random, size) + blockPos.getY();
             int z = this.randomCoord(random, size) + blockPos.getZ();
-            if (airCheck.get() == AirCheck.OFF || world.getBlockState(new BlockPos(x, y, z)).isOpaque()) {
+            if (world.getBlockState(new BlockPos(x, y, z)).isOpaque()) {
                 if (shouldPlace(world, new BlockPos(x, y, z), 1F, random)) {
                     poses.add(new Vec3d(x, y, z));
                 }
