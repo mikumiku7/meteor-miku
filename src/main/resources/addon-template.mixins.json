@@ -5,6 +5,9 @@
   "client": [
     "BlockESPMixin",
     "ClientPlayerEntity",
+    "CountPlacementModifierAccessor",
+    "HeightRangePlacementModifierAccessor",
+    "RarityFilterPlacementModifierAccessor",
     "MikuMixin"
   ],
   "injectors": {

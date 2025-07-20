@@ -59,8 +59,8 @@
 
 构建完成后，jar文件将位于 `build/libs/` 目录中：
 
-- `meteor-addon-miku-1.21.1-1.2.0.jar` - 1.21.1版本
-- `meteor-addon-miku-1.21.4-1.2.0.jar` - 1.21.4版本
+- `meteor-miku-1.21.1-1.2.0.jar` - 1.21.1版本
+- `meteor-miku-1.21.4-1.2.0.jar` - 1.21.4版本
 
 ## 注意事项
 

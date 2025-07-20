@@ -45,11 +45,14 @@ repositories {
         url = uri("https://maven.meteordev.org/snapshots")
     }
 
-    maven {
-        name = "maven3"
-        url = uri("https://maven.seedfinding.com/")
-    }
+    maven { url = uri("https://maven.seedfinding.com/") }
+    maven { url = uri("https://maven-snapshots.seedfinding.com/") }
+    maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://maven.duti.dev/releases") }
 }
+
+// Configuration that holds jars to include in the jar
+val extraLibs: Configuration by configurations.creating
 
 dependencies {
     minecraft("com.mojang:minecraft:$dynamicMinecraftVersion")
@@ -60,6 +63,23 @@ dependencies {
     modImplementation("meteordevelopment:meteor-client:$dynamicMeteorVersion")
 
     modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
+
+
+    extraLibs("dev.duti.acheong:cubiomes:1.22.5") { isTransitive = false }
+    extraLibs("dev.duti.acheong:cubiomes:1.22.5:linux64") { isTransitive = false }
+    extraLibs("dev.duti.acheong:cubiomes:1.22.5:osx") { isTransitive = false }
+    extraLibs("dev.duti.acheong:cubiomes:1.22.5:windows64") { isTransitive = false }
+
+    extraLibs("com.seedfinding:mc_core:1.210.0") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_math:1.171.0") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_seed:1.171.2") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_noise:1.171.1") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_biome:1.171.1") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_terrain:1.171.1") { isTransitive = false }
+    extraLibs("com.seedfinding:mc_feature:1.171.10") { isTransitive = false }
+
+    configurations.implementation.get().extendsFrom(extraLibs)
+
 }
 
 // 为每个版本创建构建任务
@@ -104,8 +124,62 @@ tasks.register("buildAll") {
     dependsOn(versions.keys.map { "buildFor${it.replace(".", "")}" })
 }
 
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// 在编译前生成版本特定类
+tasks.register("prepareVersionSpecificSources") {
+    doLast {
+        val utilDir = file("src/main/java/com/github/mikumiku/addon/util")
+        utilDir.mkdirs()
+
+        val sourceFile = when (currentMinecraftVersion) {
+            "1.21.1" -> file("src/main/java/com/github/mikumiku/addon/v1211/Ore.java")
+            "1.21.4" -> file("src/main/java/com/github/mikumiku/addon/v1214/Ore.java")
+            else -> throw GradleException("不支持的版本: $currentMinecraftVersion")
+        }
+
+        if (sourceFile.exists()) {
+            val targetFile = File(utilDir, "Ore.java")
+            val content = sourceFile.readText()
+                .replace("package com.github.mikumiku.addon.v1211;", "package com.github.mikumiku.addon.util;")
+                .replace("package com.github.mikumiku.addon.v1214;", "package com.github.mikumiku.addon.util;")
+
+            targetFile.writeText(content)
+            println("已生成版本特定类: ${targetFile.absolutePath}")
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            // 排除原始的版本特定文件
+            exclude("**/v1211/**")
+            exclude("**/v1214/**")
+        }
+    }
+}
+
+
+
 tasks {
     processResources {
+
+        val versionConstantsFile = File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/VersionConstants.java")
+        versionConstantsFile.parentFile.mkdirs()
+        versionConstantsFile.writeText("""
+package com.github.mikumiku.addon;
+
+public final class VersionConstants {
+    public static final String MINECRAFT_VERSION = "$currentMinecraftVersion";
+    public static final boolean IS_1_21_1 = "1.21.1".equals(MINECRAFT_VERSION);
+    public static final boolean IS_1_21_4 = "1.21.4".equals(MINECRAFT_VERSION);
+}
+    """.trimIndent())
+
+
         val propertyMap = mapOf(
             "version" to version,
             "mc_version" to currentMinecraftVersion,
@@ -125,6 +199,9 @@ tasks {
         from("LICENSE") {
             rename { "${it}_$archiveName" }
         }
+        from({
+            extraLibs.map { if (it.isDirectory) it else zipTree(it) }
+        })
     }
 
     java {
@@ -135,5 +212,8 @@ tasks {
     withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.release = 21
+
+        dependsOn("prepareVersionSpecificSources")
+
     }
 }

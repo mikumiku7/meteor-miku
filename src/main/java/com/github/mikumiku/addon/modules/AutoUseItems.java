@@ -1,21 +1,31 @@
 package com.github.mikumiku.addon.modules;
 
+import baritone.api.BaritoneAPI;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.AnchorAura;
+import meteordevelopment.meteorclient.systems.modules.combat.BedAura;
+import meteordevelopment.meteorclient.systems.modules.combat.CrystalAura;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
 import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class AutoUseItems extends Module {
+    @SuppressWarnings("unchecked")
+    private static final Class<? extends Module>[] AURAS = new Class[]{KillAura.class, CrystalAura.class, AnchorAura.class, BedAura.class};
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgHealth = settings.createGroup("生命值触发");
@@ -34,9 +44,9 @@ public class AutoUseItems extends Module {
     );
 
     private final Setting<Boolean> pauseOnUse = sgGeneral.add(new BoolSetting.Builder()
-        .name("使用时暂停")
+        .name("使用时暂停其他动作")
         .description("使用物品时暂停其他动作")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
@@ -48,12 +58,12 @@ public class AutoUseItems extends Module {
         .build()
     );
 
-    private final Setting<Double> healthThreshold = sgHealth.add(new DoubleSetting.Builder()
+    private final Setting<Integer> healthThreshold = sgHealth.add(new IntSetting.Builder()
         .name("生命值阈值")
         .description("触发使用治疗物品的生命值")
-        .defaultValue(10.0)
-        .min(1.0)
-        .max(20.0)
+        .defaultValue(10)
+        .min(1)
+        .max(20)
         .build()
     );
 
@@ -107,18 +117,18 @@ public class AutoUseItems extends Module {
     );
 
     private final Setting<Integer> timedInterval = sgTimed.add(new IntSetting.Builder()
-        .name("定时间隔")
+        .name("定时间隔（秒）")
         .description("定时使用物品的间隔（秒）")
         .defaultValue(60)
-        .min(5)
-        .max(600)
+        .min(1)
+        .max(3600)
         .build()
     );
 
     private final Setting<List<Item>> timedItems = sgTimed.add(new ItemListSetting.Builder()
         .name("定时物品")
         .description("定时使用的物品")
-        .defaultValue(Arrays.asList(Items.MILK_BUCKET))
+        .defaultValue(Collections.singletonList(Items.OMINOUS_BOTTLE))
         .build()
     );
 
@@ -133,7 +143,7 @@ public class AutoUseItems extends Module {
     private final Setting<Integer> refillThreshold = sgRefill.add(new IntSetting.Builder()
         .name("补充阈值")
         .description("当物品数量低于此值时进行补充")
-        .defaultValue(5)
+        .defaultValue(1)
         .min(1)
         .max(64)
         .build()
@@ -144,6 +154,8 @@ public class AutoUseItems extends Module {
     private int timedTimer = 0;
     private int prevSlot = -1;
     private boolean isUsing = false;
+    private final List<Class<? extends Module>> wasAura = new ArrayList<>();
+    private boolean wasBaritone;
 
     public AutoUseItems() {
         super(MikuMikuAddon.CATEGORY, "自动使用物品", "自动使用物品，支持多种触发条件");
@@ -170,7 +182,9 @@ public class AutoUseItems extends Module {
         if (mc.player == null || mc.world == null) return;
 
         // 更新计时器
-        if (useTimer > 0) useTimer--;
+        if (useTimer > 0) {
+            useTimer--;
+        }
         timedTimer++;
 
         // 如果正在使用物品且还没完成，继续等待
@@ -244,6 +258,9 @@ public class AutoUseItems extends Module {
         prevSlot = mc.player.getInventory().selectedSlot;
         InvUtils.swap(result.slot(), false);
 
+        // 暂停光环和Baritone
+        pauseModules();
+
         mc.options.useKey.setPressed(true);
         if (!mc.player.isUsingItem()) {
             Utils.rightClick();
@@ -262,6 +279,9 @@ public class AutoUseItems extends Module {
             prevSlot = -1;
         }
         isUsing = false;
+
+        // 恢复光环和Baritone
+        resumeModules();
     }
 
     private void refillHotbar() {
@@ -285,4 +305,53 @@ public class AutoUseItems extends Module {
             }
         }
     }
+
+    private void pauseModules() {
+        wasAura.clear();
+
+        // 暂停光环
+        if (pauseOnUse.get()) {
+            for (Class<? extends Module> klass : AURAS) {
+                Module module = Modules.get().get(klass);
+                if (module.isActive()) {
+                    wasAura.add(klass);
+                    module.toggle();
+                }
+            }
+        }
+
+        // 暂停Baritone
+        wasBaritone = false;
+        try {
+            if (pauseOnUse.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
+                wasBaritone = true;
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
+            }
+        } catch (Exception e) {
+            info("error:" + e);
+        }
+    }
+
+    private void resumeModules() {
+        // 恢复光环
+        if (pauseOnUse.get()) {
+            for (Class<? extends Module> klass : AURAS) {
+                Module module = Modules.get().get(klass);
+                if (wasAura.contains(klass) && !module.isActive()) {
+                    module.toggle();
+                }
+            }
+        }
+        try {
+
+            // 恢复Baritone
+            if (pauseOnUse.get() && wasBaritone) {
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
+            }
+        } catch (Exception e) {
+            info("error:" + e);
+        }
+    }
+
+
 }

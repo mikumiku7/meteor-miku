@@ -5,6 +5,7 @@ import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.SlotUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Item;
@@ -140,6 +141,8 @@ public class AutoTrashModule extends Module {
         updateTrashItems();
         tickTimer = 0;
         info("自动扔垃圾已启用，共 %d 种垃圾物品", allTrashItems.size());
+        ChatUtils.warning("Miku插件完全开源免费。如果你在别处付费了，那么就当获取信息的费用了。后续更新免费获取地址: https://github.com/mikumiku7/meteor-miku/releases");
+        ChatUtils.warning("Miku插件群：1013297171");
     }
 
     @Override
