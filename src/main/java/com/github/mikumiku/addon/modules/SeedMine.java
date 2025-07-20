@@ -210,7 +210,7 @@ public class SeedMine extends Module {
             return;
         }
 
-        info("注意种子是否正确。当前种子: " + Seeds.get().getSeed() + " 版本: " + mcVersion.get().name);
+        info("注意种子是否正确。当前种子: " + Seeds.get().getSeed().seed + " 版本: " + mcVersion.get().name);
 
         reload();
     }
