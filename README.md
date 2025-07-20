@@ -97,11 +97,14 @@
 参考或者借鉴了下面的这些， 感谢他们
 
 裤子条纹
+
 https://github.com/etianl/Trouser-Streak/releases
+
 jefff's mod
+
 https://github.com/miles352/meteor-stashhunting-addon/releases
 
-[sebseb7/autotrade-fabric: afk villager trading](https://github.com/sebseb7/autotrade-fabric)
+[自动交易](https://github.com/sebseb7/autotrade-fabric)
 
 https://github.com/AntiCope/meteor-rejects
 
@@ -112,3 +115,5 @@ https://anticope.pages.dev/addons/
 https://github.com/JFronny/MeteorAdditions
 
 https://github.com/RedCarlos26/HIGTools
+
+https://github.com/maxsupermanhd/meteor-villager-roller
