@@ -13,6 +13,7 @@ import com.seedfinding.mccore.version.MCVersion;
 import com.seedfinding.mcfeature.structure.EndCity;
 import com.seedfinding.mcfeature.structure.generator.structure.EndCityGenerator;
 import com.seedfinding.mcterrain.TerrainGenerator;
+import lombok.extern.slf4j.Slf4j;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -27,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static meteordevelopment.meteorclient.utils.world.Dimension.End;
 
+@Slf4j
 public class ElytraFinder extends Module {
 
     // 设置组
@@ -45,16 +47,16 @@ public class ElytraFinder extends Module {
         .build()
     );
 
-    private final Setting<Integer> maxResults = sgGeneral.add(new IntSetting.Builder()
-        .name("最大结果数")
-        .description("显示的最大鞘翅位置数量")
-        .defaultValue(50)
-        .min(1)
-        .max(200)
-        .sliderMin(1)
-        .sliderMax(200)
-        .build()
-    );
+//    private final Setting<Integer> maxResults = sgGeneral.add(new IntSetting.Builder()
+//        .name("最大结果数")
+//        .description("显示的最大鞘翅位置数量")
+//        .defaultValue(50)
+//        .min(1)
+//        .max(200)
+//        .sliderMin(1)
+//        .sliderMax(200)
+//        .build()
+//    );
 
     private final Setting<Boolean> includeDistance = sgGeneral.add(new BoolSetting.Builder()
         .name("路径点包含距离")
@@ -198,6 +200,7 @@ public class ElytraFinder extends Module {
                 searchElytraLocations(worldSeed, playerPos);
             } catch (Exception e) {
                 error("搜索过程中发生错误: " + e.getMessage());
+                log.error("搜索过程中发生错误: ", e);  // 在开发环境中启用
                 isSearching = false;
             }
         });
@@ -227,12 +230,8 @@ public class ElytraFinder extends Module {
             int radius = searchRadius.get();
 
             // 安全检查搜索半径
-            if (radius > 300) {
-                warning("搜索半径过大 (" + radius + ")，可能导致性能问题或错误。建议使用200以下的值。");
-                if (radius > 500) {
-                    error("搜索半径超过安全限制，已取消搜索");
-                    return;
-                }
+            if (radius > 500) {
+                warning("搜索半径过大 (" + radius + ")，可能导致性能问题或错误。 ");
             }
 
             int playerChunkX = playerPos.getX() >> 4;
@@ -264,9 +263,11 @@ public class ElytraFinder extends Module {
             int searchCount = 0;
             int totalRegions = (maxRegionX - minRegionX + 1) * (maxRegionZ - minRegionZ + 1);
 
-            info(String.format("搜索参数: 半径=%d, 间距=%d, 区域范围=(%d,%d)到(%d,%d), 总区域=%d",
-                radius, spacing, minRegionX, minRegionZ, maxRegionX, maxRegionZ, totalRegions));
-
+            String searchInfo = "搜索参数: 半径=" + radius +
+                ", 间距=" + spacing +
+                ", 区域范围=(" + minRegionX + "," + minRegionZ + ")到(" +
+                maxRegionX + "," + maxRegionZ + "), 总区域=" + totalRegions;
+            info(searchInfo);
             // 搜索指定半径内的区块
             for (int regionX = minRegionX; regionX <= maxRegionX; regionX++) {
                 for (int regionZ = minRegionZ; regionZ <= maxRegionZ; regionZ++) {
@@ -293,9 +294,9 @@ public class ElytraFinder extends Module {
 
                                     elytraLocations.add(new ElytraLocation(blockPos, distance));
 
-                                    if (elytraLocations.size() >= maxResults.get()) {
-                                        break;
-                                    }
+//                                    if (elytraLocations.size() >= maxResults.get()) {
+//                                        break;
+//                                    }
                                 }
 
                                 endCityGenerator.reset();
@@ -307,20 +308,19 @@ public class ElytraFinder extends Module {
                     }
 
                     searchCount++;
-                    if (searchCount % 50 == 0) {
-                        // 定期更新进度
-                        double progress = (double) searchCount / totalRegions * 100;
-                        info(String.format("搜索进度: %.1f%% (%d/%d区域)", progress, searchCount, totalRegions));
-                    }
+
                 }
 
-                if (elytraLocations.size() >= maxResults.get()) {
-                    break;
-                }
+//                if (elytraLocations.size() >= maxResults.get()) {
+//                    break;
+//                }
             }
 
         } catch (Exception e) {
             error("搜索过程中发生错误, 建议调小搜索半径: " + e.getMessage());
+
+//            info(ExceptionToStringUtils.getStackTraceAsString(e));
+
             return;
         }
 
