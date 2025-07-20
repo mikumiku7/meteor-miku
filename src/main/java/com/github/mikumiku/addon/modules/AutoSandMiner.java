@@ -10,10 +10,15 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ShulkerBoxBlock;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.ShovelItem;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Arrays;
@@ -53,17 +58,26 @@ public class AutoSandMiner extends Module {
     );
 
     // 潜影盒设置
-    private final Setting<BlockPos> sandShulkerPos = sgShulkerBoxes.add(new BlockPosSetting.Builder()
-        .name("沙子存储潜影盒位置")
-        .description("存放沙子的潜影盒坐标")
-        .defaultValue(new BlockPos(0, 64, 0))
+    private final Setting<Integer> shulkerSearchRadius = sgShulkerBoxes.add(new IntSetting.Builder()
+        .name("潜影盒搜索半径")
+        .description("搜索潜影盒的半径范围")
+        .defaultValue(32)
+        .min(1)
+        .max(128)
         .build()
     );
 
-    private final Setting<BlockPos> toolShulkerPos = sgShulkerBoxes.add(new BlockPosSetting.Builder()
-        .name("工具潜影盒位置")
-        .description("存放铲子的潜影盒坐标")
-        .defaultValue(new BlockPos(0, 64, 1))
+    private final Setting<String> sandShulkerName = sgShulkerBoxes.add(new StringSetting.Builder()
+        .name("沙子存储潜影盒名称")
+        .description("存放沙子的潜影盒名称（留空则使用第一个找到的潜影盒）")
+        .defaultValue("沙子存储")
+        .build()
+    );
+
+    private final Setting<String> toolShulkerName = sgShulkerBoxes.add(new StringSetting.Builder()
+        .name("工具潜影盒名称")
+        .description("存放工具的潜影盒名称（留空则使用第二个找到的潜影盒）")
+        .defaultValue("工具存储")
         .build()
     );
 
@@ -191,32 +205,46 @@ public class AutoSandMiner extends Module {
     }
 
     private void handleInventoryFull() {
-        info("背包已满，前往存储潜影盒");
-        currentState = MinerState.GOING_TO_STORAGE;
+        info("背包已满，搜索存储潜影盒");
 
-        BlockPos shulkerPos = new BlockPos(sandShulkerPos.get());
-        BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(shulkerPos));
+        BlockPos sandShulker = findShulkerBox(sandShulkerName.get(), true);
+        if (sandShulker != null) {
+            currentState = MinerState.GOING_TO_STORAGE;
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(sandShulker));
+            info("找到沙子存储潜影盒: " + sandShulker.toShortString());
+        } else {
+            error("未找到沙子存储潜影盒！");
+            currentState = MinerState.MINING;
+        }
     }
 
     private void handleToolBroken() {
-        info("工具耐久度过低，前往工具潜影盒");
-        currentState = MinerState.GOING_TO_TOOLS;
+        info("工具耐久度过低，搜索工具潜影盒");
 
-        BlockPos toolPos = new BlockPos(toolShulkerPos.get());
-        BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(toolPos));
+        BlockPos toolShulker = findShulkerBox(toolShulkerName.get(), false);
+        if (toolShulker != null) {
+            currentState = MinerState.GOING_TO_TOOLS;
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(toolShulker));
+            info("找到工具存储潜影盒: " + toolShulker.toShortString());
+        } else {
+            error("未找到工具存储潜影盒！");
+            currentState = MinerState.MINING;
+        }
     }
 
     private void handleGoingToStorage() {
-        BlockPos shulkerPos = new BlockPos(sandShulkerPos.get());
-        if (mc.player.getBlockPos().isWithinDistance(shulkerPos, 2)) {
+        // 检查是否到达任何潜影盒附近
+        BlockPos nearbyShulker = findNearbyShulkerBox();
+        if (nearbyShulker != null && mc.player.getBlockPos().isWithinDistance(nearbyShulker, 2)) {
             currentState = MinerState.STORING_ITEMS;
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
     }
 
     private void handleGoingToTools() {
-        BlockPos toolPos = new BlockPos(toolShulkerPos.get());
-        if (mc.player.getBlockPos().isWithinDistance(toolPos, 2)) {
+        // 检查是否到达任何潜影盒附近
+        BlockPos nearbyShulker = findNearbyShulkerBox();
+        if (nearbyShulker != null && mc.player.getBlockPos().isWithinDistance(nearbyShulker, 2)) {
             currentState = MinerState.GETTING_TOOLS;
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
@@ -271,9 +299,18 @@ public class AutoSandMiner extends Module {
         FindItemResult shovel = InvUtils.find(itemStack -> itemStack.getItem() instanceof ShovelItem);
         if (!shovel.found()) return true;
 
-//        int durability = shovel.().getMaxDamage() - shovel.stack().getDamage();
+        // 获取物品堆栈
+        var itemStack = mc.player.getInventory().getStack(shovel.slot());
 
-        return durability <= minDurability.get();
+        // 检查物品是否可损坏
+        if (!itemStack.isDamageable()) return false;
+
+        // 计算剩余耐久度
+        int maxDamage = itemStack.getMaxDamage();
+        int currentDamage = itemStack.getDamage();
+        int remainingDurability = maxDamage - currentDamage;
+
+        return remainingDurability <= minDurability.get();
     }
 
     private BlockPos findNearestSand() {
@@ -298,5 +335,85 @@ public class AutoSandMiner extends Module {
         }
 
         return nearestSand;
+    }
+
+    private BlockPos findShulkerBox(String targetName, boolean isSandStorage) {
+        BlockPos playerPos = mc.player.getBlockPos();
+        int radius = shulkerSearchRadius.get();
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    BlockPos pos = playerPos.add(x, y, z);
+                    Block block = mc.world.getBlockState(pos).getBlock();
+
+                    if (block instanceof ShulkerBoxBlock) {
+                        // 如果设置了名称，检查潜影盒名称
+                        if (!targetName.isEmpty()) {
+                            BlockEntity blockEntity = mc.world.getBlockEntity(pos);
+                            if (blockEntity instanceof ShulkerBoxBlockEntity shulkerBox) {
+                                Text customName = shulkerBox.getCustomName();
+                                if (customName != null && customName.getString().contains(targetName)) {
+                                    return pos;
+                                }
+                            }
+                        } else {
+                            // 如果没有设置名称，返回找到的第一个潜影盒
+                            return pos;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 如果按名称没找到，尝试按顺序返回潜影盒
+        if (targetName.isEmpty()) {
+            return findShulkerBoxByOrder(isSandStorage ? 0 : 1);
+        }
+
+        return null;
+    }
+
+    private BlockPos findShulkerBoxByOrder(int order) {
+        BlockPos playerPos = mc.player.getBlockPos();
+        int radius = shulkerSearchRadius.get();
+        int foundCount = 0;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    BlockPos pos = playerPos.add(x, y, z);
+                    Block block = mc.world.getBlockState(pos).getBlock();
+
+                    if (block instanceof ShulkerBoxBlock) {
+                        if (foundCount == order) {
+                            return pos;
+                        }
+                        foundCount++;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private BlockPos findNearbyShulkerBox() {
+        BlockPos playerPos = mc.player.getBlockPos();
+
+        for (int x = -3; x <= 3; x++) {
+            for (int y = -3; y <= 3; y++) {
+                for (int z = -3; z <= 3; z++) {
+                    BlockPos pos = playerPos.add(x, y, z);
+                    Block block = mc.world.getBlockState(pos).getBlock();
+
+                    if (block instanceof ShulkerBoxBlock) {
+                        return pos;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }

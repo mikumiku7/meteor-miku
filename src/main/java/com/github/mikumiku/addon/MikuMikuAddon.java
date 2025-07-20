@@ -23,7 +23,7 @@ public class MikuMikuAddon extends MeteorAddon {
 
         // Modules
         Modules modules = Modules.get();
-        modules.add(new ModuleExample());
+//        modules.add(new ModuleExample());
         modules.add(new PlayerAlert());
         modules.add(new AutoTrashModule());
         modules.add(new LiquidFiller());
