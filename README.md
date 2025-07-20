@@ -84,7 +84,7 @@
 
 ## 📄 许可证 (License)
 
-本项目采用 [MIT License](LICENSE.md) 开源许可。
+本项目采用 [GPL3](LICENSE) 开源许可。
 
 基于 [meteor-addon-template](https://github.com/MeteorDevelopment/meteor-addon-template) 开发。
 
