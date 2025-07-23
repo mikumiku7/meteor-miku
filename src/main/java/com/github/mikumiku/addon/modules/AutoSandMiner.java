@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import baritone.api.BaritoneAPI;
+import baritone.api.Settings;
 import baritone.api.pathing.goals.GoalBlock;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
@@ -17,10 +18,14 @@ import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.ShovelItem;
+import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class AutoSandMiner extends Module {
 
@@ -113,6 +118,9 @@ public class AutoSandMiner extends Module {
     private BlockPos lastMiningPos = null;
     private BlockPos currentTarget = null;
     private BlockPos toolShulkerPos = null; // 用户选择的工具潜影盒位置
+    private Set<BlockPos> protectedShulkerBoxes = new HashSet<>(); // 受保护的潜影盒位置
+    private int shulkerInteractionTimer = 0; // 潜影盒交互计时器
+    private boolean waitingForShulkerOpen = false; // 等待潜影盒打开
 
     public AutoSandMiner() {
         super(MikuMikuAddon.CATEGORY, "自动挖沙", "自动挖沙模块，支持背包管理和工具更换");
@@ -138,6 +146,12 @@ public class AutoSandMiner extends Module {
         lastMiningPos = null;
         currentTarget = null;
         toolShulkerPos = null;
+        protectedShulkerBoxes.clear();
+        shulkerInteractionTimer = 0;
+        waitingForShulkerOpen = false;
+
+        // 扫描并保护所有潜影盒
+        scanAndProtectShulkerBoxes();
 
         info("自动挖沙模块已启动");
         info("请右键点击工具存储潜影盒来选择它！");
@@ -148,8 +162,11 @@ public class AutoSandMiner extends Module {
         // 停止baritone
         if (BaritoneUtils.IS_AVAILABLE) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
+            // 清理保护设置
+            clearProtectedBlocks();
         }
 
+        protectedShulkerBoxes.clear();
         info("自动挖沙模块已停止");
     }
 
@@ -164,10 +181,14 @@ public class AutoSandMiner extends Module {
             toolShulkerPos = pos;
             currentState = MinerState.MINING;
 
+            // 更新保护设置
+            updateProtectedBlocks();
+
             // 取消交互事件，防止打开潜影盒
             event.cancel();
 
             info("工具潜影盒已选择: " + pos.toShortString());
+            info("已保护所有潜影盒免被挖掘");
             info("开始自动挖沙！");
         } else {
             warning("请右键点击潜影盒来选择工具存储位置！");
@@ -239,6 +260,8 @@ public class AutoSandMiner extends Module {
         BlockPos sandShulker = findSandStorageShulkerBox();
         if (sandShulker != null) {
             currentState = MinerState.GOING_TO_STORAGE;
+//            BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
+
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(sandShulker));
             info("找到沙子存储潜影盒: " + sandShulker.toShortString());
         } else {
@@ -264,7 +287,7 @@ public class AutoSandMiner extends Module {
     private void handleGoingToStorage() {
         // 检查是否到达任何潜影盒附近
         BlockPos nearbyShulker = findNearbyShulkerBox();
-        if (nearbyShulker != null && mc.player.getBlockPos().isWithinDistance(nearbyShulker, 2)) {
+        if (nearbyShulker != null && mc.player.getBlockPos().isWithinDistance(nearbyShulker, 4)) {
             currentState = MinerState.STORING_ITEMS;
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
@@ -272,36 +295,73 @@ public class AutoSandMiner extends Module {
 
     private void handleGoingToTools() {
         // 检查是否到达工具潜影盒附近
-        if (toolShulkerPos != null && mc.player.getBlockPos().isWithinDistance(toolShulkerPos, 2)) {
+        if (toolShulkerPos != null && mc.player.getBlockPos().isWithinDistance(toolShulkerPos, 4)) {
             currentState = MinerState.GETTING_TOOLS;
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
     }
 
     private void handleStoringItems() {
-        // 这里应该实现打开潜影盒并存储沙子的逻辑
-        // 由于复杂性，这里简化处理
-        info("正在存储沙子...");
+        // 检查是否需要等待潜影盒打开
+        if (waitingForShulkerOpen) {
+            shulkerInteractionTimer++;
+            if (shulkerInteractionTimer > 20) { // 等待1秒
+                waitingForShulkerOpen = false;
+                shulkerInteractionTimer = 0;
+            } else {
+                return;
+            }
+        }
 
-        // 模拟存储完成
-        if (autoReturn.get() && lastMiningPos != null) {
-            currentState = MinerState.RETURNING;
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(lastMiningPos));
+        // 检查当前屏幕是否是潜影盒界面
+
+        if (mc.player.currentScreenHandler.slots.size() > 36) {
+
+            // 存储沙子到潜影盒
+            storeSandToShulkerBox();
         } else {
-            currentState = MinerState.MINING;
+            // 尝试打开附近的沙子存储潜影盒
+            BlockPos nearbyShulker = findNearbyShulkerBox();
+            if (nearbyShulker != null) {
+                openShulkerBox(nearbyShulker);
+                waitingForShulkerOpen = true;
+                shulkerInteractionTimer = 0;
+            } else {
+                error("附近没有找到潜影盒！");
+                currentState = MinerState.MINING;
+            }
         }
     }
 
     private void handleGettingTools() {
-        // 这里应该实现打开潜影盒并获取新工具的逻辑
-        info("正在获取新工具...");
+        // 检查是否需要等待潜影盒打开
+        if (waitingForShulkerOpen) {
+            shulkerInteractionTimer++;
+            if (shulkerInteractionTimer > 20) { // 等待1秒
+                waitingForShulkerOpen = false;
+                shulkerInteractionTimer = 0;
+            } else {
+                return;
+            }
+        }
 
-        // 模拟获取完成
-        if (autoReturn.get() && lastMiningPos != null) {
-            currentState = MinerState.RETURNING;
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(lastMiningPos));
+        // 检查当前屏幕是否是潜影盒界面
+        if (mc.player.currentScreenHandler.getType().toString().contains("shulker") ||
+            mc.player.currentScreenHandler.slots.size() > 36) {
+
+            // 从潜影盒获取工具
+            getToolFromShulkerBox();
+
         } else {
-            currentState = MinerState.MINING;
+            // 尝试打开工具潜影盒
+            if (toolShulkerPos != null) {
+                openShulkerBox(toolShulkerPos);
+                waitingForShulkerOpen = true;
+                shulkerInteractionTimer = 0;
+            } else {
+                error("工具潜影盒位置未设置！");
+                currentState = MinerState.WAITING_TOOL_SELECTION;
+            }
         }
     }
 
@@ -387,7 +447,6 @@ public class AutoSandMiner extends Module {
     }
 
 
-
     private BlockPos findNearbyShulkerBox() {
         BlockPos playerPos = mc.player.getBlockPos();
 
@@ -405,5 +464,278 @@ public class AutoSandMiner extends Module {
         }
 
         return null;
+    }
+
+    private void scanAndProtectShulkerBoxes() {
+        protectedShulkerBoxes.clear();
+        BlockPos playerPos = mc.player.getBlockPos();
+        int radius = shulkerSearchRadius.get();
+
+        // 扫描范围内的所有潜影盒
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    BlockPos pos = playerPos.add(x, y, z);
+                    Block block = mc.world.getBlockState(pos).getBlock();
+
+                    if (block instanceof ShulkerBoxBlock) {
+                        protectedShulkerBoxes.add(pos);
+                    }
+                }
+            }
+        }
+
+        info("已扫描到 " + protectedShulkerBoxes.size() + " 个潜影盒，将被保护");
+    }
+
+    private void updateProtectedBlocks() {
+        if (!BaritoneUtils.IS_AVAILABLE) return;
+
+        try {
+            Settings settings = BaritoneAPI.getSettings();
+
+
+            // 将所有潜影盒添加到不可破坏的方块列表
+            List<Block> blocksToAvoid = new ArrayList<>();
+
+            // 添加所有潜影盒类型
+            blocksToAvoid.add(Blocks.SHULKER_BOX);
+            blocksToAvoid.add(Blocks.WHITE_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.ORANGE_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.MAGENTA_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.LIGHT_BLUE_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.YELLOW_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.LIME_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.PINK_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.GRAY_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.LIGHT_GRAY_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.CYAN_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.PURPLE_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.BLUE_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.BROWN_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.GREEN_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.RED_SHULKER_BOX);
+            blocksToAvoid.add(Blocks.BLACK_SHULKER_BOX);
+
+
+            // 设置不可破坏的方块
+            settings.blocksToDisallowBreaking.value = blocksToAvoid;
+
+            info("已设置 Baritone 保护所有潜影盒");
+
+        } catch (Exception e) {
+            warning("设置 Baritone 保护失败: " + e.getMessage());
+        }
+    }
+
+    private void clearProtectedBlocks() {
+        if (!BaritoneUtils.IS_AVAILABLE) return;
+
+        try {
+            var settings = BaritoneAPI.getSettings();
+
+            // 清空不可破坏的方块列表
+            settings.blocksToDisallowBreaking.value = new java.util.ArrayList<>();
+
+        } catch (Exception e) {
+            warning("清理 Baritone 保护设置失败: " + e.getMessage());
+        }
+    }
+
+    private void openShulkerBox(BlockPos pos) {
+        if (mc.interactionManager == null) return;
+
+        // 计算点击位置
+        Vec3d hitVec = Vec3d.ofCenter(pos);
+        Direction side = Direction.UP; // 默认从上方点击
+
+        // 创建方块命中结果
+        BlockHitResult hitResult = new BlockHitResult(hitVec, side, pos, false);
+
+        // 右键点击潜影盒
+        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
+
+        info("正在打开潜影盒: " + pos.toShortString());
+    }
+
+    private void storeSandToShulkerBox() {
+        if (mc.interactionManager == null) return;
+
+        int sandMoved = 0;
+        int maxMovesPerTick = 3; // 每tick最多移动3组物品，防止操作过快
+
+        // 遍历玩家背包，寻找沙子
+        for (int i = 0; i < mc.player.getInventory().size() && sandMoved < maxMovesPerTick; i++) {
+            var stack = mc.player.getInventory().getStack(i);
+
+            if (!stack.isEmpty() && stack.getItem() == Items.SAND) {
+                // 寻找潜影盒中的空槽位或相同物品槽位
+                int targetSlot = findShulkerSlotForItem(stack);
+
+                if (targetSlot != -1) {
+                    // 移动物品到潜影盒
+                    moveItemToShulker(i, targetSlot);
+                    sandMoved++;
+                    info("移动沙子到潜影盒，数量: " + stack.getCount());
+                }
+            }
+        }
+
+        // 如果没有更多沙子需要存储，关闭潜影盒并继续
+        if (sandMoved == 0 || !hasMoreSandToStore()) {
+            closeShulkerBox();
+
+            if (autoReturn.get() && lastMiningPos != null) {
+                currentState = MinerState.RETURNING;
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(lastMiningPos));
+            } else {
+                currentState = MinerState.MINING;
+            }
+
+            info("沙子存储完成");
+        }
+    }
+
+    private void getToolFromShulkerBox() {
+        if (mc.interactionManager == null) return;
+
+        // 寻找潜影盒中的铲子
+        int toolSlot = findToolInShulker();
+
+        if (toolSlot != -1) {
+            // 寻找玩家背包中的空槽位或损坏的工具槽位
+            int targetSlot = findPlayerSlotForTool();
+
+            if (targetSlot != -1) {
+                // 移动工具到玩家背包
+                moveItemFromShulker(toolSlot, targetSlot);
+                info("获取新工具成功");
+
+                // 关闭潜影盒并继续
+                closeShulkerBox();
+
+                if (autoReturn.get() && lastMiningPos != null) {
+                    currentState = MinerState.RETURNING;
+                    BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(lastMiningPos));
+                } else {
+                    currentState = MinerState.MINING;
+                }
+            } else {
+                warning("背包已满，无法获取新工具！");
+                closeShulkerBox();
+                currentState = MinerState.MINING;
+            }
+        } else {
+            warning("潜影盒中没有找到可用的铲子！");
+            closeShulkerBox();
+            currentState = MinerState.MINING;
+        }
+    }
+
+    private int findShulkerSlotForItem(net.minecraft.item.ItemStack stack) {
+        var handler = mc.player.currentScreenHandler;
+
+        // 潜影盒槽位通常是前27个槽位（0-26）
+        for (int i = 0; i < 27; i++) {
+            var slotStack = handler.getSlot(i).getStack();
+
+            // 寻找空槽位或相同物品的槽位
+            if (slotStack.isEmpty() ||
+                (slotStack.getItem() == stack.getItem() && slotStack.getCount() < slotStack.getMaxCount())) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int findToolInShulker() {
+        var handler = mc.player.currentScreenHandler;
+
+        // 按优先级顺序寻找工具
+        for (Item preferredTool : preferredShovels.get()) {
+            for (int i = 0; i < 27; i++) {
+                var slotStack = handler.getSlot(i).getStack();
+
+                if (!slotStack.isEmpty() && slotStack.getItem() == preferredTool) {
+                    // 检查工具耐久度
+                    if (!slotStack.isDamageable() ||
+                        (slotStack.getMaxDamage() - slotStack.getDamage()) > minDurability.get()) {
+                        return i;
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private int findPlayerSlotForTool() {
+        // 首先寻找损坏的工具槽位
+        for (int i = 0; i < mc.player.getInventory().size(); i++) {
+            var stack = mc.player.getInventory().getStack(i);
+
+            if (!stack.isEmpty() && stack.getItem() instanceof ShovelItem) {
+                if (stack.isDamageable() &&
+                    (stack.getMaxDamage() - stack.getDamage()) <= minDurability.get()) {
+                    return i + 27; // 转换为屏幕槽位索引
+                }
+            }
+        }
+
+        // 然后寻找空槽位
+        for (int i = 0; i < mc.player.getInventory().size(); i++) {
+            if (mc.player.getInventory().getStack(i).isEmpty()) {
+                return i + 27; // 转换为屏幕槽位索引
+            }
+        }
+
+        return -1;
+    }
+
+    private void moveItemToShulker(int playerSlot, int shulkerSlot) {
+        if (mc.interactionManager == null) return;
+
+        // 转换玩家槽位索引
+        int screenSlot = playerSlot + 27;
+
+        // Shift+左键快速移动
+        mc.interactionManager.clickSlot(
+            mc.player.currentScreenHandler.syncId,
+            screenSlot,
+            0,
+            SlotActionType.QUICK_MOVE,
+            mc.player
+        );
+    }
+
+    private void moveItemFromShulker(int shulkerSlot, int playerSlot) {
+        if (mc.interactionManager == null) return;
+
+        // Shift+左键快速移动
+        mc.interactionManager.clickSlot(
+            mc.player.currentScreenHandler.syncId,
+            shulkerSlot,
+            0,
+            SlotActionType.QUICK_MOVE,
+            mc.player
+        );
+    }
+
+    private boolean hasMoreSandToStore() {
+        for (int i = 0; i < mc.player.getInventory().size(); i++) {
+            var stack = mc.player.getInventory().getStack(i);
+            if (!stack.isEmpty() && stack.getItem() == Items.SAND) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void closeShulkerBox() {
+        if (mc.player.currentScreenHandler != mc.player.playerScreenHandler) {
+            mc.player.closeHandledScreen();
+            info("关闭潜影盒");
+        }
     }
 }
