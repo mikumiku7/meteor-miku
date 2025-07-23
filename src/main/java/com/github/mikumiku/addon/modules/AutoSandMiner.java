@@ -3,6 +3,7 @@ package com.github.mikumiku.addon.modules;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.settings.*;
@@ -13,12 +14,9 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.ShovelItem;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Arrays;
@@ -67,20 +65,6 @@ public class AutoSandMiner extends Module {
         .build()
     );
 
-    private final Setting<String> sandShulkerName = sgShulkerBoxes.add(new StringSetting.Builder()
-        .name("沙子存储潜影盒名称")
-        .description("存放沙子的潜影盒名称（留空则使用第一个找到的潜影盒）")
-        .defaultValue("沙子存储")
-        .build()
-    );
-
-    private final Setting<String> toolShulkerName = sgShulkerBoxes.add(new StringSetting.Builder()
-        .name("工具潜影盒名称")
-        .description("存放工具的潜影盒名称（留空则使用第二个找到的潜影盒）")
-        .defaultValue("工具存储")
-        .build()
-    );
-
     // 工具管理设置
     private final Setting<Integer> minDurability = sgTools.add(new IntSetting.Builder()
         .name("最低耐久度")
@@ -106,23 +90,33 @@ public class AutoSandMiner extends Module {
 
     // 状态变量
     private enum MinerState {
-        MINING,           // 正在挖掘
-        INVENTORY_FULL,   // 背包满了，需要存储
-        TOOL_BROKEN,      // 工具坏了，需要更换
-        GOING_TO_STORAGE, // 前往存储潜影盒
-        GOING_TO_TOOLS,   // 前往工具潜影盒
-        STORING_ITEMS,    // 正在存储物品
-        GETTING_TOOLS,    // 正在获取工具
-        RETURNING         // 返回挖掘位置
+        WAITING_TOOL_SELECTION, // 等待用户选择工具潜影盒
+        MINING,                 // 正在挖掘
+        WAITING_FOR_TARGET_BOX,   // 等待目标潜影盒
+        INVENTORY_FULL,         // 背包满了，需要存储
+        TOOL_BROKEN,            // 工具坏了，需要更换
+        GOING_TO_STORAGE,       // 前往存储潜影盒
+        GOING_TO_TOOLS,         // 前往工具潜影盒
+        STORING_ITEMS,          // 正在存储物品
+        GETTING_TOOLS,          // 正在获取工具
+        RETURNING               // 返回挖掘位置
     }
 
-    private MinerState currentState = MinerState.MINING;
+    private MinerState currentState = MinerState.WAITING_TOOL_SELECTION;
     private int tickTimer = 0;
     private BlockPos lastMiningPos = null;
     private BlockPos currentTarget = null;
+    private BlockPos toolShulkerPos = null; // 用户选择的工具潜影盒位置
 
     public AutoSandMiner() {
         super(MikuMikuAddon.CATEGORY, "自动挖沙", "自动挖沙模块，支持背包管理和工具更换");
+    }
+
+    // 重置工具潜影盒选择的方法
+    public void resetToolShulkerSelection() {
+        toolShulkerPos = null;
+        currentState = MinerState.WAITING_TOOL_SELECTION;
+        info("工具潜影盒选择已重置，请重新右键选择工具潜影盒！");
     }
 
     @Override
@@ -133,12 +127,14 @@ public class AutoSandMiner extends Module {
             return;
         }
 
-        currentState = MinerState.MINING;
+        currentState = MinerState.WAITING_TOOL_SELECTION;
         tickTimer = 0;
         lastMiningPos = null;
         currentTarget = null;
+        toolShulkerPos = null;
 
         info("自动挖沙模块已启动");
+        info("请右键点击工具存储潜影盒来选择它！");
     }
 
     @Override
@@ -152,8 +148,34 @@ public class AutoSandMiner extends Module {
     }
 
     @EventHandler
+    private void onInteractBlock(InteractBlockEvent event) {
+        if (currentState != MinerState.WAITING_TOOL_SELECTION) return;
+
+        BlockPos pos = event.result.getBlockPos();
+        Block block = mc.world.getBlockState(pos).getBlock();
+
+        if (block instanceof ShulkerBoxBlock) {
+            toolShulkerPos = pos;
+            currentState = MinerState.MINING;
+
+            // 取消交互事件，防止打开潜影盒
+            event.cancel();
+
+            info("工具潜影盒已选择: " + pos.toShortString());
+            info("开始自动挖沙！");
+        } else {
+            warning("请右键点击潜影盒来选择工具存储位置！");
+        }
+    }
+
+    @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null) return;
+
+        // 如果还在等待选择工具潜影盒，不执行其他逻辑
+        if (currentState == MinerState.WAITING_TOOL_SELECTION) {
+            return;
+        }
 
         // 延迟控制
         if (tickTimer > 0) {
@@ -174,6 +196,7 @@ public class AutoSandMiner extends Module {
 
         tickTimer = delay.get();
     }
+
 
     private void handleMining() {
         // 检查背包是否满了
@@ -197,7 +220,7 @@ public class AutoSandMiner extends Module {
 
                 // 使用baritone挖掘
                 BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess().mine(Blocks.SAND);
-                info("开始挖掘沙子: " + sandPos.toShortString());
+//                info("开始挖掘沙子: " + sandPos.toShortString());
             }
         } else {
             info("附近没有找到沙子");
@@ -205,9 +228,9 @@ public class AutoSandMiner extends Module {
     }
 
     private void handleInventoryFull() {
-        info("背包已满，搜索存储潜影盒");
+        info("背包已满，搜索沙子存储潜影盒");
 
-        BlockPos sandShulker = findShulkerBox(sandShulkerName.get(), true);
+        BlockPos sandShulker = findSandStorageShulkerBox();
         if (sandShulker != null) {
             currentState = MinerState.GOING_TO_STORAGE;
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(sandShulker));
@@ -219,16 +242,16 @@ public class AutoSandMiner extends Module {
     }
 
     private void handleToolBroken() {
-        info("工具耐久度过低，搜索工具潜影盒");
+        info("工具耐久度过低，前往工具潜影盒");
 
-        BlockPos toolShulker = findShulkerBox(toolShulkerName.get(), false);
-        if (toolShulker != null) {
+        if (toolShulkerPos != null) {
             currentState = MinerState.GOING_TO_TOOLS;
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(toolShulker));
-            info("找到工具存储潜影盒: " + toolShulker.toShortString());
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(toolShulkerPos));
+            info("前往工具存储潜影盒: " + toolShulkerPos.toShortString());
         } else {
-            error("未找到工具存储潜影盒！");
-            currentState = MinerState.MINING;
+            error("工具潜影盒位置未设置！请重新启动模块并选择工具潜影盒。");
+            currentState = MinerState.WAITING_TOOL_SELECTION;
+            info("请右键点击工具存储潜影盒来选择它！");
         }
     }
 
@@ -242,9 +265,8 @@ public class AutoSandMiner extends Module {
     }
 
     private void handleGoingToTools() {
-        // 检查是否到达任何潜影盒附近
-        BlockPos nearbyShulker = findNearbyShulkerBox();
-        if (nearbyShulker != null && mc.player.getBlockPos().isWithinDistance(nearbyShulker, 2)) {
+        // 检查是否到达工具潜影盒附近
+        if (toolShulkerPos != null && mc.player.getBlockPos().isWithinDistance(toolShulkerPos, 2)) {
             currentState = MinerState.GETTING_TOOLS;
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
@@ -337,7 +359,7 @@ public class AutoSandMiner extends Module {
         return nearestSand;
     }
 
-    private BlockPos findShulkerBox(String targetName, boolean isSandStorage) {
+    private BlockPos findSandStorageShulkerBox() {
         BlockPos playerPos = mc.player.getBlockPos();
         int radius = shulkerSearchRadius.get();
 
@@ -347,49 +369,9 @@ public class AutoSandMiner extends Module {
                     BlockPos pos = playerPos.add(x, y, z);
                     Block block = mc.world.getBlockState(pos).getBlock();
 
-                    if (block instanceof ShulkerBoxBlock) {
-                        // 如果设置了名称，检查潜影盒名称
-                        if (!targetName.isEmpty()) {
-                            BlockEntity blockEntity = mc.world.getBlockEntity(pos);
-                            if (blockEntity instanceof ShulkerBoxBlockEntity shulkerBox) {
-                                Text customName = shulkerBox.getCustomName();
-                                if (customName != null && customName.getString().contains(targetName)) {
-                                    return pos;
-                                }
-                            }
-                        } else {
-                            // 如果没有设置名称，返回找到的第一个潜影盒
-                            return pos;
-                        }
-                    }
-                }
-            }
-        }
-
-        // 如果按名称没找到，尝试按顺序返回潜影盒
-        if (targetName.isEmpty()) {
-            return findShulkerBoxByOrder(isSandStorage ? 0 : 1);
-        }
-
-        return null;
-    }
-
-    private BlockPos findShulkerBoxByOrder(int order) {
-        BlockPos playerPos = mc.player.getBlockPos();
-        int radius = shulkerSearchRadius.get();
-        int foundCount = 0;
-
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -radius; y <= radius; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    BlockPos pos = playerPos.add(x, y, z);
-                    Block block = mc.world.getBlockState(pos).getBlock();
-
-                    if (block instanceof ShulkerBoxBlock) {
-                        if (foundCount == order) {
-                            return pos;
-                        }
-                        foundCount++;
+                    // 找到潜影盒，但不是工具潜影盒
+                    if (block instanceof ShulkerBoxBlock && !pos.equals(toolShulkerPos)) {
+                        return pos;
                     }
                 }
             }
@@ -397,6 +379,8 @@ public class AutoSandMiner extends Module {
 
         return null;
     }
+
+
 
     private BlockPos findNearbyShulkerBox() {
         BlockPos playerPos = mc.player.getBlockPos();
