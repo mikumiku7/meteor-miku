@@ -19,6 +19,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.ShovelItem;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -305,18 +306,17 @@ public class AutoSandMiner extends Module {
         // 检查是否需要等待潜影盒打开
         if (waitingForShulkerOpen) {
             shulkerInteractionTimer++;
-            if (shulkerInteractionTimer > 20) { // 等待1秒
+            if (shulkerInteractionTimer > 40) { // 等待2秒
                 waitingForShulkerOpen = false;
                 shulkerInteractionTimer = 0;
+                warning("潜影盒打开超时，重试中...");
             } else {
                 return;
             }
         }
 
         // 检查当前屏幕是否是潜影盒界面
-
-        if (mc.player.currentScreenHandler.slots.size() > 36) {
-
+        if (isShulkerBoxOpen()) {
             // 存储沙子到潜影盒
             storeSandToShulkerBox();
         } else {
@@ -337,21 +337,19 @@ public class AutoSandMiner extends Module {
         // 检查是否需要等待潜影盒打开
         if (waitingForShulkerOpen) {
             shulkerInteractionTimer++;
-            if (shulkerInteractionTimer > 20) { // 等待1秒
+            if (shulkerInteractionTimer > 40) { // 等待2秒
                 waitingForShulkerOpen = false;
                 shulkerInteractionTimer = 0;
+                warning("工具潜影盒打开超时，重试中...");
             } else {
                 return;
             }
         }
 
         // 检查当前屏幕是否是潜影盒界面
-        if (mc.player.currentScreenHandler.getType().toString().contains("shulker") ||
-            mc.player.currentScreenHandler.slots.size() > 36) {
-
+        if (isShulkerBoxOpen()) {
             // 从潜影盒获取工具
             getToolFromShulkerBox();
-
         } else {
             // 尝试打开工具潜影盒
             if (toolShulkerPos != null) {
@@ -543,19 +541,37 @@ public class AutoSandMiner extends Module {
     }
 
     private void openShulkerBox(BlockPos pos) {
-        if (mc.interactionManager == null) return;
+        if (mc.interactionManager == null || mc.player == null) return;
 
-        // 计算点击位置
-        Vec3d hitVec = Vec3d.ofCenter(pos);
-        Direction side = Direction.UP; // 默认从上方点击
+        try {
+            // 确保玩家在潜影盒附近
+            if (!mc.player.getBlockPos().isWithinDistance(pos, 5)) {
+                warning("距离潜影盒太远，无法打开");
+                return;
+            }
 
-        // 创建方块命中结果
-        BlockHitResult hitResult = new BlockHitResult(hitVec, side, pos, false);
+            // 确保目标位置确实是潜影盒
+            Block block = mc.world.getBlockState(pos).getBlock();
+            if (!(block instanceof ShulkerBoxBlock)) {
+                warning("目标位置不是潜影盒: " + pos.toShortString());
+                return;
+            }
 
-        // 右键点击潜影盒
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
+            // 计算点击位置
+            Vec3d hitVec = Vec3d.ofCenter(pos);
+            Direction side = Direction.UP; // 默认从上方点击
 
-        info("正在打开潜影盒: " + pos.toShortString());
+            // 创建方块命中结果
+            BlockHitResult hitResult = new BlockHitResult(hitVec, side, pos, false);
+
+            // 右键点击潜影盒
+            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
+
+            info("正在打开潜影盒: " + pos.toShortString());
+
+        } catch (Exception e) {
+            error("打开潜影盒时发生错误: " + e.getMessage());
+        }
     }
 
     private void storeSandToShulkerBox() {
@@ -633,10 +649,16 @@ public class AutoSandMiner extends Module {
     }
 
     private int findShulkerSlotForItem(net.minecraft.item.ItemStack stack) {
+        if (!(mc.currentScreen instanceof ShulkerBoxScreen)) {
+            return -1;
+        }
+
         var handler = mc.player.currentScreenHandler;
 
         // 潜影盒槽位通常是前27个槽位（0-26）
         for (int i = 0; i < 27; i++) {
+            if (i >= handler.slots.size()) break;
+
             var slotStack = handler.getSlot(i).getStack();
 
             // 寻找空槽位或相同物品的槽位
@@ -650,11 +672,17 @@ public class AutoSandMiner extends Module {
     }
 
     private int findToolInShulker() {
+        if (!(mc.currentScreen instanceof ShulkerBoxScreen)) {
+            return -1;
+        }
+
         var handler = mc.player.currentScreenHandler;
 
         // 按优先级顺序寻找工具
         for (Item preferredTool : preferredShovels.get()) {
             for (int i = 0; i < 27; i++) {
+                if (i >= handler.slots.size()) break;
+
                 var slotStack = handler.getSlot(i).getStack();
 
                 if (!slotStack.isEmpty() && slotStack.getItem() == preferredTool) {
@@ -733,9 +761,14 @@ public class AutoSandMiner extends Module {
     }
 
     private void closeShulkerBox() {
-        if (mc.player.currentScreenHandler != mc.player.playerScreenHandler) {
+        if (mc.currentScreen instanceof ShulkerBoxScreen) {
             mc.player.closeHandledScreen();
             info("关闭潜影盒");
         }
+    }
+
+    private boolean isShulkerBoxOpen() {
+        // 使用正确的方法检测潜影盒界面
+        return mc.currentScreen instanceof ShulkerBoxScreen;
     }
 }
