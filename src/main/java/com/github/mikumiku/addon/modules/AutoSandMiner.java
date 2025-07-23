@@ -34,8 +34,10 @@ public class AutoSandMiner extends Module {
         .name("挖掘范围")
         .description("搜索沙子的范围")
         .defaultValue(32)
-        .min(1)
-        .max(128)
+        .min(4)
+        .max(200)
+        .sliderMin(8)
+        .sliderMax(200)
         .build()
     );
 
@@ -45,6 +47,8 @@ public class AutoSandMiner extends Module {
         .defaultValue(5)
         .min(0)
         .max(20)
+        .sliderMin(0)
+        .sliderMax(20)
         .build()
     );
 
@@ -60,8 +64,10 @@ public class AutoSandMiner extends Module {
         .name("潜影盒搜索半径")
         .description("搜索潜影盒的半径范围")
         .defaultValue(32)
-        .min(1)
-        .max(128)
+        .min(4)
+        .max(200)
+        .sliderMin(8)
+        .sliderMax(200)
         .build()
     );
 
