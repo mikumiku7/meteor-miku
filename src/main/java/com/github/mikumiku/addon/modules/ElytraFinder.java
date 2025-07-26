@@ -38,7 +38,7 @@ public class ElytraFinder extends Module {
     // 通用设置
     private final Setting<Integer> searchRadius = sgGeneral.add(new IntSetting.Builder()
         .name("搜索半径")
-        .description("以玩家为中心的搜索半径（区块）。建议不超过200以避免性能问题")
+        .description("以玩家为中心的搜索半径（区块）。")
         .defaultValue(50)
         .min(10)
         .max(2000)
@@ -75,8 +75,8 @@ public class ElytraFinder extends Module {
     // 种子设置
     private final Setting<String> seedInput = sgSeed.add(new StringSetting.Builder()
         .name("种子")
-        .description("输入服务器种子")
-        .defaultValue("")
+        .description("输入服务器种子(默认3C3U种子)")
+        .defaultValue("-7346913998703726680")
         .build()
     );
 
