@@ -149,7 +149,7 @@ public class PlayerAlert extends MikuModule {
     private int tickCounter = 0;
 
     public PlayerAlert() {
-        super(MikuMikuAddon.CATEGORY, "player-alert", "当有玩家进入附近时播放声音并提醒");
+        super(MikuMikuAddon.CATEGORY, "玩家提醒", "当有玩家进入附近时播放声音并提醒");
     }
 
     @Override
@@ -276,7 +276,11 @@ public class PlayerAlert extends MikuModule {
      */
     private boolean isFriendly(PlayerEntity player) {
         // 示例：可以基于队伍、公会、朋友列表等判断
-        // 这里简单返回false，表示所有玩家都视为潜在威胁
+        // 目前简单地将所有玩家都视为敌对玩家（除非在同一个队伍中）
+        // 如果玩家在同一队伍中，则认为是友好的
+        if (mc.player != null && mc.player.isTeammate(player)) {
+            return true;
+        }
         return false;
     }
 

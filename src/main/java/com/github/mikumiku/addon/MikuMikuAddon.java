@@ -30,6 +30,7 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new LiquidFiller());
         modules.add(new AutoSandMiner());
         modules.add(new AutoUseItems());
+        modules.add(new TreeAura());
         modules.add(new SeedMine());
         modules.add(new ElytraFinder());
 //        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
