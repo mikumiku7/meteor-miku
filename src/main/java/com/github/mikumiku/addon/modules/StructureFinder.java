@@ -33,7 +33,6 @@ public class StructureFinder extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSeed = settings.createGroup("种子设置");
     private final SettingGroup sgStructures = settings.createGroup("结构设置");
-
     // 通用设置
     private final Setting<Integer> searchRadius = sgGeneral.add(new IntSetting.Builder()
         .name("搜索半径")
@@ -95,126 +94,126 @@ public class StructureFinder extends Module {
     private final Setting<Boolean> findVillage = sgStructures.add(new BoolSetting.Builder()
         .name("查找村庄")
         .description("查找村庄结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findShipwreck = sgStructures.add(new BoolSetting.Builder()
         .name("查找沉船")
         .description("查找沉船结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findBuriedTreasure = sgStructures.add(new BoolSetting.Builder()
         .name("查找埋藏的宝藏")
         .description("查找埋藏的宝藏结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findOceanRuin = sgStructures.add(new BoolSetting.Builder()
         .name("查找海底废墟")
         .description("查找海底废墟结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findPillagerOutpost = sgStructures.add(new BoolSetting.Builder()
         .name("查找掠夺者前哨站")
         .description("查找掠夺者前哨站结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findNetherFortress = sgStructures.add(new BoolSetting.Builder()
         .name("查找下界要塞")
         .description("查找下界要塞结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findBastionRemnant = sgStructures.add(new BoolSetting.Builder()
         .name("查找堡垒遗迹")
         .description("查找堡垒遗迹结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findEndCity = sgStructures.add(new BoolSetting.Builder()
         .name("查找末地城")
         .description("查找末地城结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findDesertPyramid = sgStructures.add(new BoolSetting.Builder()
         .name("查找沙漠神殿")
         .description("查找沙漠神殿结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findIgloo = sgStructures.add(new BoolSetting.Builder()
         .name("查找雪屋")
         .description("查找雪屋结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findJunglePyramid = sgStructures.add(new BoolSetting.Builder()
         .name("查找丛林神庙")
         .description("查找丛林神庙结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findMansion = sgStructures.add(new BoolSetting.Builder()
         .name("查找林地府邸")
         .description("查找林地府邸结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findMineshaft = sgStructures.add(new BoolSetting.Builder()
         .name("查找废弃矿井")
         .description("查找废弃矿井结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findMonument = sgStructures.add(new BoolSetting.Builder()
         .name("查找海底神殿")
         .description("查找海底神殿结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findNetherFossil = sgStructures.add(new BoolSetting.Builder()
         .name("查找下界化石")
         .description("查找下界化石结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findRuinedPortal = sgStructures.add(new BoolSetting.Builder()
         .name("查找废弃传送门")
         .description("查找废弃传送门结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findStronghold = sgStructures.add(new BoolSetting.Builder()
         .name("查找要塞")
         .description("查找要塞结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> findSwampHut = sgStructures.add(new BoolSetting.Builder()
         .name("查找沼泽小屋")
         .description("查找沼泽小屋结构")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
