@@ -223,7 +223,7 @@ public class StructureFinder extends Module {
     private CompletableFuture<Void> searchTask = null;
 
     public StructureFinder() {
-        super(MikuMikuAddon.CATEGORY, "结构搜索", "自动搜索各种结构位置");
+        super(MikuMikuAddon.CATEGORY, "结构搜索", "自动搜索各种结构位置。此模块需要 xaero 小地图mod。");
     }
 
     @Override
@@ -354,81 +354,80 @@ public class StructureFinder extends Module {
 
             // 搜索主世界结构
             if (findVillage.get()) {
-                searchStructure(structureLocations, new Village(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "村庄");
+                searchRegionStructure(structureLocations, new Village(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "村庄");
             }
 
             if (findShipwreck.get()) {
-                searchStructure(structureLocations, new Shipwreck(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沉船");
+                searchRegionStructure(structureLocations, new Shipwreck(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沉船");
             }
 
             if (findBuriedTreasure.get()) {
-                searchStructure(structureLocations, new BuriedTreasure(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "埋藏的宝藏");
+                searchRegionStructure(structureLocations, new BuriedTreasure(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "埋藏的宝藏");
             }
 
             if (findOceanRuin.get()) {
-                searchStructure(structureLocations, new OceanRuin(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "海底废墟");
+                searchRegionStructure(structureLocations, new OceanRuin(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "海底废墟");
             }
 
             if (findPillagerOutpost.get()) {
-                searchStructure(structureLocations, new PillagerOutpost(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "掠夺者前哨站");
+                searchRegionStructure(structureLocations, new PillagerOutpost(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "掠夺者前哨站");
             }
 
             if (findDesertPyramid.get()) {
-                searchStructure(structureLocations, new DesertPyramid(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沙漠神殿");
+                searchRegionStructure(structureLocations, new DesertPyramid(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沙漠神殿");
             }
 
             if (findIgloo.get()) {
-                searchStructure(structureLocations, new Igloo(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "雪屋");
+                searchRegionStructure(structureLocations, new Igloo(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "雪屋");
             }
 
             if (findJunglePyramid.get()) {
-                searchStructure(structureLocations, new JunglePyramid(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "丛林神庙");
+                searchRegionStructure(structureLocations, new JunglePyramid(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "丛林神庙");
             }
 
             if (findMansion.get()) {
-                searchStructure(structureLocations, new Mansion(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "林地府邸");
+                searchRegionStructure(structureLocations, new Mansion(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "林地府邸");
             }
 
             if (findMineshaft.get()) {
-                // searchStructure(structureLocations, new Mineshaft(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "废弃矿井");
+                searchStructure(structureLocations, new Mineshaft(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "废弃矿井");
             }
 
             if (findMonument.get()) {
-                searchStructure(structureLocations, new Monument(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "海底神殿");
+                searchRegionStructure(structureLocations, new Monument(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "海底神殿");
             }
 
             if (findRuinedPortal.get()) {
-
-                searchStructure(structureLocations, new RuinedPortal(Dimension.OVERWORLD, version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "废弃传送门");
+                searchRegionStructure(structureLocations, new RuinedPortal(Dimension.OVERWORLD, version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "废弃传送门");
             }
 
             if (findStronghold.get()) {
-                // searchStructure(structureLocations, new Stronghold(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "要塞");
+                searchStructure(structureLocations, new Stronghold(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "要塞");
             }
 
             if (findSwampHut.get()) {
-                searchStructure(structureLocations, new SwampHut(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沼泽小屋");
+                searchRegionStructure(structureLocations, new SwampHut(version), seed, overworldBiomeSource, rand, playerChunkX, playerChunkZ, radius, "沼泽小屋");
             }
 
             // 搜索下界结构
             if (findNetherFortress.get()) {
                 // 下界要塞搜索
-                searchNetherStructure(structureLocations, new Fortress(version), seed, version, playerChunkX, playerChunkZ, radius, "下界要塞");
+                searchNetherRegionStructure(structureLocations, new Fortress(version), seed, version, playerChunkX, playerChunkZ, radius, "下界要塞");
             }
 
             if (findBastionRemnant.get()) {
                 // 堡垒遗迹搜索
-                searchNetherStructure(structureLocations, new BastionRemnant(version), seed, version, playerChunkX, playerChunkZ, radius, "堡垒遗迹");
+                searchNetherRegionStructure(structureLocations, new BastionRemnant(version), seed, version, playerChunkX, playerChunkZ, radius, "堡垒遗迹");
             }
 
             if (findNetherFossil.get()) {
                 // 下界化石搜索
-                searchNetherStructure(structureLocations, new NetherFossil(version), seed, version, playerChunkX, playerChunkZ, radius, "下界化石");
+                searchNetherRegionStructure(structureLocations, new NetherFossil(version), seed, version, playerChunkX, playerChunkZ, radius, "下界化石");
             }
 
             // 搜索末地结构
             if (findEndCity.get()) {
-                searchEndStructure(structureLocations, new EndCity(version), seed, version, playerChunkX, playerChunkZ, radius, "末地城");
+                searchEndRegionStructure(structureLocations, new EndCity(version), seed, version, playerChunkX, playerChunkZ, radius, "末地城");
             }
 
         } catch (Exception e) {
@@ -441,7 +440,44 @@ public class StructureFinder extends Module {
         isSearching = false;
     }
 
-    private void searchStructure(List<StructureLocation> locations, RegionStructure structure, long seed, BiomeSource biomeSource, ChunkRand rand, int playerChunkX, int playerChunkZ, int radius, String structureName) {
+    private void searchStructure(List<StructureLocation> locations, Structure structure, long seed, BiomeSource biomeSource, ChunkRand rand, int playerChunkX, int playerChunkZ, int radius, String structureName) {
+        try {
+            int minChunkX = Math.max(playerChunkX - radius, Integer.MIN_VALUE / 2);
+            int maxChunkX = Math.min(playerChunkX + radius, Integer.MAX_VALUE / 2);
+            int minChunkZ = Math.max(playerChunkZ - radius, Integer.MIN_VALUE / 2);
+            int maxChunkZ = Math.min(playerChunkZ + radius, Integer.MAX_VALUE / 2);
+
+            for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+                for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                    if (!isSearching) return; // 检查是否被取消
+
+                    try {
+                        CPos pos = new CPos(chunkX, chunkZ);
+
+                        // 检查是否在搜索范围内
+                        double chunkDistance = Math.sqrt(Math.pow(pos.getX() - playerChunkX, 2) +
+                            Math.pow(pos.getZ() - playerChunkZ, 2));
+                        if (chunkDistance > radius) continue;
+
+                        if (structure.canSpawn(pos, biomeSource)) {
+                            BPos blockPos = new BPos(pos.getX() * 16, 0, pos.getZ() * 16);
+                            double distance = Math.sqrt(Math.pow(blockPos.getX() - playerChunkX * 16, 2) +
+                                Math.pow(blockPos.getZ() - playerChunkZ * 16, 2));
+
+                            locations.add(new StructureLocation(blockPos, distance, structureName));
+                        }
+                    } catch (Exception e) {
+                        warning(String.format("处理区块 (%d,%d) 时出错: %s", chunkX, chunkZ, e.getMessage()));
+                        continue;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            warning("搜索结构 " + structureName + " 时出错: " + e.getMessage());
+        }
+    }
+
+    private void searchRegionStructure(List<StructureLocation> locations, RegionStructure<?, ?> structure, long seed, BiomeSource biomeSource, ChunkRand rand, int playerChunkX, int playerChunkZ, int radius, String structureName) {
         try {
             int spacing = structure.getSpacing();
             if (spacing <= 0) {
@@ -465,7 +501,9 @@ public class StructureFinder extends Module {
 
                     try {
                         CPos pos = structure.getInRegion(seed, regionX, regionZ, rand);
-
+                        if (pos == null) {
+                            continue;
+                        }
                         // 检查是否在搜索范围内
                         double chunkDistance = Math.sqrt(Math.pow(pos.getX() - playerChunkX, 2) +
                             Math.pow(pos.getZ() - playerChunkZ, 2));
@@ -473,6 +511,7 @@ public class StructureFinder extends Module {
 
                         if (structure.canSpawn(pos, biomeSource)) {
                             BPos blockPos = new BPos(pos.getX() * 16, 0, pos.getZ() * 16);
+
                             double distance = Math.sqrt(Math.pow(blockPos.getX() - playerChunkX * 16, 2) +
                                 Math.pow(blockPos.getZ() - playerChunkZ * 16, 2));
 
@@ -489,7 +528,7 @@ public class StructureFinder extends Module {
         }
     }
 
-    private void searchNetherStructure(List<StructureLocation> locations, RegionStructure structure, long seed, MCVersion version, int playerChunkX, int playerChunkZ, int radius, String structureName) {
+    private void searchNetherRegionStructure(List<StructureLocation> locations, RegionStructure<?, ?> structure, long seed, MCVersion version, int playerChunkX, int playerChunkZ, int radius, String structureName) {
         try {
             // 下界结构需要使用下界维度
             BiomeSource netherBiomeSource = BiomeSource.of(Dimension.NETHER, version, seed);
@@ -542,7 +581,7 @@ public class StructureFinder extends Module {
         }
     }
 
-    private void searchEndStructure(List<StructureLocation> locations, RegionStructure structure, long seed, MCVersion version, int playerChunkX, int playerChunkZ, int radius, String structureName) {
+    private void searchEndRegionStructure(List<StructureLocation> locations, RegionStructure<?, ?> structure, long seed, MCVersion version, int playerChunkX, int playerChunkZ, int radius, String structureName) {
         try {
             // 末地结构需要使用末地维度
             BiomeSource endBiomeSource = BiomeSource.of(Dimension.END, version, seed);
@@ -627,7 +666,7 @@ public class StructureFinder extends Module {
             }
 
             // 添加到Xaero路径点（Y坐标设为100）
-            WaypointUtils.addToWaypoints(pos.getX(), 100, pos.getZ(), waypointName);
+            WaypointUtils.addToWaypoints(pos.getX(), 100, pos.getZ(), waypointName, "结构");
             addedCount++;
         }
 

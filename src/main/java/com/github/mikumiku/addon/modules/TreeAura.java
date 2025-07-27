@@ -36,17 +36,23 @@ public class TreeAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     // 是否启用视角旋转设置，控制是否在放置方块时转向目标位置
-    private final Setting<Boolean> rotation = sgGeneral.add(new BoolSetting.Builder().name("rotate").description("rotate for block interactions").defaultValue(false).build());
+    private final Setting<Boolean> rotation = sgGeneral.add(new BoolSetting.Builder()
+        .name("视角旋转").description("在与方块交互时是否旋转视角").defaultValue(false).build());
     // 种植树木的延迟设置（tick），控制种植操作之间的间隔时间
-    private final Setting<Integer> plantDelay = sgGeneral.add(new IntSetting.Builder().name("plant-delay").description("delay between planting trees").defaultValue(6).min(0).sliderMax(25).build());
+    private final Setting<Integer> plantDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("种植延迟").description("种植树木之间的延迟").defaultValue(6).min(0).sliderMax(25).build());
     // 施加骨粉的延迟设置（tick），控制对树苗使用骨粉的间隔时间
-    private final Setting<Integer> bonemealDelay = sgGeneral.add(new IntSetting.Builder().name("bonemeal-delay").description("delay between placing bonemeal on trees").defaultValue(3).min(0).sliderMax(25).build());
+    private final Setting<Integer> bonemealDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("骨粉延迟").description("在树木上放置骨粉之间的延迟").defaultValue(3).min(0).sliderMax(25).build());
     // 水平种植半径设置，控制水平方向上的种植范围
-    private final Setting<Integer> rRange = sgGeneral.add(new IntSetting.Builder().name("radius").description("how far you can place horizontally").defaultValue(4).min(1).sliderMax(5).build());
+    private final Setting<Integer> rRange = sgGeneral.add(new IntSetting.Builder()
+        .name("半径").description("您可以水平放置多远").defaultValue(4).min(1).sliderMax(5).build());
     // 垂直种植范围设置，控制垂直方向上的种植范围
-    private final Setting<Integer> yRange = sgGeneral.add(new IntSetting.Builder().name("y-range").description("how far you can place vertically").defaultValue(3).min(1).sliderMax(5).build());
+    private final Setting<Integer> yRange = sgGeneral.add(new IntSetting.Builder()
+        .name("Y轴范围").description("您可以垂直放置多远").defaultValue(3).min(1).sliderMax(5).build());
     // 排序模式设置（最近或最远），控制选择种植/施肥位置的优先级
-    private final Setting<SortMode> sortMode = sgGeneral.add(new EnumSetting.Builder<SortMode>().name("sort-mode").description("how to sort nearby trees/placements.").defaultValue(SortMode.Farthest).build());
+    private final Setting<SortMode> sortMode = sgGeneral.add(new EnumSetting.Builder<SortMode>()
+        .name("排序模式").description("如何排序附近的树木/放置位置").defaultValue(SortMode.Farthest).build());
 
     // 骨粉使用计时器和种植计时器，用于控制操作频率
     private int bonemealTimer, plantTimer;

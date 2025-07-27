@@ -3,6 +3,7 @@ package com.github.mikumiku.addon.util;
 import xaero.common.minimap.waypoints.Waypoint;
 import xaero.hud.minimap.BuiltInHudModules;
 import xaero.hud.minimap.module.MinimapSession;
+import xaero.hud.minimap.waypoint.WaypointColor;
 import xaero.hud.minimap.waypoint.set.WaypointSet;
 import xaero.hud.minimap.world.MinimapWorld;
 import xaero.map.mods.SupportMods;
@@ -35,7 +36,35 @@ public class WaypointUtils {
         waypointSet.add(waypoint);
 
         SupportMods.xaeroMinimap.requestWaypointsRefresh();
+    }
 
+    public static void addToWaypoints(int x, int y, int z, String name, String shortName) {
+        WaypointSet waypointSet = getWaypointSet();
+        if (waypointSet == null) return;
+
+        // dont add waypoint that already exists
+        if (getWaypointByCoordinate(x, z) != null) return;
+
+        // set color based on total storage blocks
+        /**
+         * @see WaypointColor
+         */
+        int color = 10; // green
+        //13 紫色
+
+        Waypoint waypoint = new Waypoint(
+            x,
+            y,
+            z,
+            name,
+            shortName,
+            color,
+            0,
+            false);
+
+        waypointSet.add(waypoint);
+
+        SupportMods.xaeroMinimap.requestWaypointsRefresh();
     }
 
     public static Waypoint getWaypointByCoordinate(int x, int z) {
