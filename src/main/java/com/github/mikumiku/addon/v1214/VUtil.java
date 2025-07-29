@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.v1214;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
@@ -16,7 +17,8 @@ public class VUtil {
         return EnchantmentHelper.getEnchantedBookWith(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
     }
 
-    public static Registry<Enchantment> getEnchantmentRegistry(DynamicRegistryManager registryManager) {
+    public static Registry<Enchantment> getEnchantmentRegistry() {
+        DynamicRegistryManager registryManager = MinecraftClient.getInstance().world.getRegistryManager();
         return registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
     }
 }

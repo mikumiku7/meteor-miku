@@ -10,9 +10,7 @@ import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.utils.misc.Names;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.util.Identifier;
@@ -73,7 +71,7 @@ public class EnchantmentSelectScreen extends WindowScreen {
         if (mc.world == null) {
             return;
         }
-        Registry<Enchantment> reg = VUtil.getEnchantmentRegistry(mc.world.getRegistryManager());
+        Registry<Enchantment> reg = VUtil.getEnchantmentRegistry();
         List<RegistryEntry<Enchantment>> available = new ArrayList<>();
         if (this.onlyTradeable) {
             var l = reg.iterateEntries(EnchantmentTags.TRADEABLE);

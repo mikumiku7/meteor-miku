@@ -1,13 +1,19 @@
 package com.github.mikumiku.addon.modules;
 
-import com.github.mikumiku.addon.MikuMikuAddon;
+import baritone.api.BaritoneAPI;
+import baritone.api.IBaritone;
+import baritone.api.utils.BetterBlockPos;
+import com.github.mikumiku.addon.BaseModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.pathing.NopPathManager;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ContainerComponent;
@@ -20,11 +26,13 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-public class ShulkerBoxItemFetcher extends Module {
+public class ShulkerBoxItemFetcher extends BaseModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSettings = settings.createGroup("Settings");
+    IBaritone baritone;
 
     // Settings
     private final Setting<Item> targetItem = sgGeneral.add(new ItemSetting.Builder()
@@ -37,7 +45,7 @@ public class ShulkerBoxItemFetcher extends Module {
     private final Setting<Integer> delay = sgSettings.add(new IntSetting.Builder()
         .name("delay")
         .description("Delay between actions in ticks.")
-        .defaultValue(5)
+        .defaultValue(2)
         .min(1)
         .max(20)
         .build()
@@ -64,6 +72,13 @@ public class ShulkerBoxItemFetcher extends Module {
         .build()
     );
 
+    private final Setting<Boolean> autoRotate = sgSettings.add(new BoolSetting.Builder()
+        .name("auto-rotate")
+        .description("Automatically rotate to look at blocks when interacting.")
+        .defaultValue(true)
+        .build()
+    );
+
     // Internal state
     private enum State {
         SEARCHING_SHULKER,
@@ -84,12 +99,11 @@ public class ShulkerBoxItemFetcher extends Module {
     private boolean isProcessing = false;
     private int stateTimeout = 0;
     private static final int MAX_STATE_TIMEOUT = 100; // 5 seconds at 20 TPS
-
-    protected MinecraftClient mc;
+    private boolean hasRotated = false; // Track if we've rotated to look at the shulker box
 
     public ShulkerBoxItemFetcher() {
-        super(MikuMikuAddon.CATEGORY, "shulker-item-fetcher", "自动从潜影盒中获取指定物品");
-        mc = MinecraftClient.getInstance();
+        super("盒中取物", "自动从潜影盒中获取指定物品。自动放盒，取物，打盒，捡盒");
+        baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
     }
 
     @Override
@@ -100,6 +114,13 @@ public class ShulkerBoxItemFetcher extends Module {
             return;
         }
 
+        if (PathManagers.get() instanceof NopPathManager) {
+            info("需要 Baritone");
+            toggle();
+            return;
+        }
+
+
         currentState = State.SEARCHING_SHULKER;
         tickCounter = 0;
         shulkerSlot = -1;
@@ -107,6 +128,7 @@ public class ShulkerBoxItemFetcher extends Module {
         shulkerBoxItem = null;
         isProcessing = false;
         stateTimeout = 0;
+        hasRotated = false;
 
         if (logActions.get()) {
             info("开始寻找潜影盒中的 " + targetItem.get().getName().getString());
@@ -183,9 +205,9 @@ public class ShulkerBoxItemFetcher extends Module {
         }
 
         // No suitable shulker box found
-        if (logActions.get()) {
-            error("未找到包含 " + targetItem.get().getName().getString() + " 的潜影盒");
-        }
+
+        error("未找到包含 " + targetItem.get().getName().getString() + " 的潜影盒");
+
         changeState(State.FINISHED);
     }
 
@@ -211,7 +233,7 @@ public class ShulkerBoxItemFetcher extends Module {
         BlockPos placePos = findSuitablePlacePosition(playerPos);
 
         if (placePos == null) {
-            if (logActions.get()) error("找不到合适的位置放置潜影盒");
+            error("找不到合适的位置放置潜影盒");
             changeState(State.FINISHED);
             return;
         }
@@ -226,12 +248,16 @@ public class ShulkerBoxItemFetcher extends Module {
         // Select the shulker box
         mc.player.getInventory().selectedSlot = shulkerSlot;
 
-        // Place the shulker box
-        Direction facing = Direction.UP;
-        Vec3d hitPos = Vec3d.ofCenter(placePos).add(0, 1, 0);
-        BlockHitResult hitResult = new BlockHitResult(hitPos, facing, placePos.down(), false);
+        // Look at the placement position
+        lookAtBlock(placePos);
 
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
+        // Place the shulker box
+//        Direction facing = Direction.UP;
+//        Vec3d hitPos = Vec3d.ofCenter(placePos).add(0, 1, 0);
+//        BlockHitResult hitResult = new BlockHitResult(hitPos, facing, placePos.down(), false);
+//        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
+//
+        BlockUtils.place(placePos, new FindItemResult(shulkerSlot, 1), true, 10);
 
         shulkerPos = placePos;
         changeState(State.OPENING_SHULKER);
@@ -242,17 +268,32 @@ public class ShulkerBoxItemFetcher extends Module {
     }
 
     private BlockPos findSuitablePlacePosition(BlockPos playerPos) {
-        // Try positions around the player
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                for (int y = -1; y <= 1; y++) {
-                    BlockPos testPos = playerPos.add(x, y, z);
-                    if (mc.world.getBlockState(testPos).isAir() &&
-                        !mc.world.getBlockState(testPos.down()).isAir()) {
-                        return testPos;
+        // Search from near to far using distance-based approach
+        for (int distance = 1; distance <= 3; distance++) {
+            for (int x = -distance; x <= distance; x++) {
+                for (int z = -distance; z <= distance; z++) {
+                    // Only check positions at the current distance boundary
+                    if (Math.abs(x) == distance || Math.abs(z) == distance) {
+                        for (int y = -1; y <= 1; y++) {
+                            BlockPos testPos = playerPos.add(x, y, z);
+                            if (mc.world.getBlockState(testPos).isAir() &&
+                                BlockUtils.canPlace(testPos) &&
+                                !mc.world.getBlockState(testPos.down()).isAir()) {
+
+                                if (debugMode.get()) {
+                                    double dist = Math.sqrt(x * x + y * y + z * z);
+                                    info("找到合适位置: " + testPos.toShortString() + " (距离: " + String.format("%.1f", dist) + ")");
+                                }
+                                return testPos;
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        if (logActions.get()) {
+            error("在3格范围内未找到合适的放置位置");
         }
         return null;
     }
@@ -293,11 +334,37 @@ public class ShulkerBoxItemFetcher extends Module {
             return;
         }
 
-        // Right-click on the shulker box to open it
-        Direction facing = Direction.UP;
-        Vec3d hitPos = Vec3d.ofCenter(shulkerPos);
-        BlockHitResult hitResult = new BlockHitResult(hitPos, facing, shulkerPos, false);
+        // First, look at the shulker box
+        if (!hasRotated) {
+            lookAtBlock(shulkerPos);
+            hasRotated = true;
+            if (logActions.get()) info("转头看向潜影盒: " + shulkerPos.toShortString());
+            return; // Wait one tick for rotation to complete
+        }
 
+        // Wait a few ticks after rotation to ensure it's complete
+        if (stateTimeout < 3) {
+            return; // Wait 3 ticks after rotation
+        }
+
+        // Now right-click on the shulker box to open it
+
+
+        // 确保目标位置确实是潜影盒
+        Block block = mc.world.getBlockState(shulkerPos).getBlock();
+        if (!(block instanceof ShulkerBoxBlock)) {
+            warning("目标位置不是潜影盒: " + shulkerPos.toShortString());
+            return;
+        }
+
+        // 计算点击位置
+        Vec3d hitVec = Vec3d.ofCenter(shulkerPos);
+        Direction side = Direction.UP; // 默认从上方点击
+
+        // 创建方块命中结果
+        BlockHitResult hitResult = new BlockHitResult(hitVec, side, shulkerPos, false);
+
+        // 右键点击潜影盒
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
 
         changeState(State.EXTRACTING_ITEMS);
@@ -314,7 +381,8 @@ public class ShulkerBoxItemFetcher extends Module {
         }
 
         if (!(mc.currentScreen instanceof HandledScreen)) {
-            if (logActions.get()) info("等待容器界面打开... (当前界面: " + mc.currentScreen.getClass().getSimpleName() + ")");
+            if (logActions.get())
+                info("等待容器界面打开... (当前界面: " + mc.currentScreen.getClass().getSimpleName() + ")");
             return;
         }
 
@@ -403,20 +471,56 @@ public class ShulkerBoxItemFetcher extends Module {
             return;
         }
 
-        // Break the shulker box
-        mc.interactionManager.attackBlock(shulkerPos, Direction.UP);
-        mc.interactionManager.breakBlock(shulkerPos);
+        // Check if the shulker box still exists
+        if (mc.world.getBlockState(shulkerPos).isAir()) {
+            if (logActions.get()) info("潜影盒已经不存在了");
+            changeState(State.PICKING_UP_SHULKER);
+            baritone.getPathingBehavior().cancelEverything();
+            return;
+        }
+        // Look at the shulker box before breaking
+        lookAtBlock(shulkerPos);
+
+
+        BetterBlockPos betterBlockPos = BetterBlockPos.from(shulkerPos);
+        baritone.getSelectionManager().addSelection(betterBlockPos, betterBlockPos);
+        baritone.getBuilderProcess().clearArea(betterBlockPos, betterBlockPos);
 
         changeState(State.PICKING_UP_SHULKER);
-        if (logActions.get()) info("潜影盒已挖掘");
+        if (logActions.get()) info("潜影盒挖掘完成");
+
+        // Use the correct packet method to break the block
+//        if (stateTimeout == 0) {
+//            // Send start destroy packet
+//            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(
+//                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
+//                shulkerPos,
+//                Direction.UP
+//            ));
+//            if (debugMode.get()) info("发送开始挖掘包: " + shulkerPos.toShortString());
+//        } else if (stateTimeout >= 10) { // Wait a few ticks then send stop packet
+//            // Send stop destroy packet
+//            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(
+//                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+//                shulkerPos,
+//                Direction.UP
+//            ));
+//            if (debugMode.get()) info("发送停止挖掘包");
+//
+//        }
+        // Wait between start and stop packets
     }
 
     private void pickUpShulkerBox() {
         if (logActions.get()) info("等待拾取潜影盒...");
 
-        // Wait a moment for the item to drop and be picked up automatically
-        // The item should be picked up automatically by the game
-        changeState(State.FINISHED);
+        // Wait a few ticks for the item to drop and be picked up automatically
+        // Use stateTimeout to wait for a reasonable amount of time
+        if (stateTimeout > 20) { // Wait 1 second (20 ticks)
+            changeState(State.FINISHED);
+            if (logActions.get()) info("拾取等待完成");
+        }
+        // Otherwise stay in this state and wait
     }
 
     private void finishProcess() {
@@ -439,6 +543,11 @@ public class ShulkerBoxItemFetcher extends Module {
         shulkerBoxItem = null;
         isProcessing = false;
         stateTimeout = 0;
+        hasRotated = false;
+
+        baritone.getSelectionManager().removeAllSelections();
+        baritone.getPathingBehavior().cancelEverything();
+
     }
 
     private void changeState(State newState) {
@@ -448,6 +557,25 @@ public class ShulkerBoxItemFetcher extends Module {
             }
             currentState = newState;
             stateTimeout = 0; // Reset timeout when changing state
+            hasRotated = false; // Reset rotation flag when changing state
+        }
+    }
+
+    private void lookAtBlock(BlockPos pos) {
+        if (mc.player == null || !autoRotate.get()) return;
+
+        Vec3d playerPos = mc.player.getEyePos();
+        Vec3d blockCenter = Vec3d.ofCenter(pos);
+        Vec3d direction = blockCenter.subtract(playerPos).normalize();
+
+        float yaw = (float) (MathHelper.atan2(direction.z, direction.x) * 180.0 / Math.PI) - 90.0f;
+        float pitch = (float) -(MathHelper.atan2(direction.y, Math.sqrt(direction.x * direction.x + direction.z * direction.z)) * 180.0 / Math.PI);
+
+//        mc.player.setYaw(yaw);
+//        mc.player.setPitch(pitch);
+        Rotations.rotate(yaw, pitch);
+        if (debugMode.get()) {
+            info("转头看向方块: " + pos.toShortString() + " (Yaw: " + String.format("%.1f", yaw) + ", Pitch: " + String.format("%.1f", pitch) + ")");
         }
     }
 }

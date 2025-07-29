@@ -11,6 +11,8 @@ import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.pathing.BaritoneUtils;
+import meteordevelopment.meteorclient.pathing.NopPathManager;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
@@ -193,6 +195,12 @@ public class SeedMine extends Module {
         if (Seeds.get().getSeed() == null) {
             error("未找到种子。请在种子设置中输入种子并点击应用");
             this.toggle();
+            return;
+        }
+
+        if (PathManagers.get() instanceof NopPathManager) {
+            info("需要 Baritone");
+            toggle();
             return;
         }
 

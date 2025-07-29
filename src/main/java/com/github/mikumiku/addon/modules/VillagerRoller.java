@@ -671,7 +671,7 @@ public class VillagerRoller extends Module {
 
             for (Pair<RegistryEntry<Enchantment>, Integer> enchant : getEnchants(sellItem)) {
                 int enchantLevel = enchant.right();
-                var reg = VUtil.getEnchantmentRegistry(mc.world.getRegistryManager());
+                var reg = VUtil.getEnchantmentRegistry( );
 
                 String enchantIdString = reg.getId(enchant.key().value()).toString();
                 String enchantName = Names.get(enchant.key());
