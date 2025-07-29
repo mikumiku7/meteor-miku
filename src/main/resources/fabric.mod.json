@@ -18,7 +18,7 @@
     ]
   },
   "mixins": [
-    "addon-template.mixins.json"
+    "miku.mixins.json"
   ],
   "custom": {
     "meteor-client:color": "225,25,25"

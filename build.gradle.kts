@@ -26,9 +26,9 @@ val versions = mapOf(
 )
 
 // 获取当前构建的版本（从命令行参数或默认值）
-val currentMinecraftVersion =
+val currentMcVersion =
     project.findProperty("minecraft_version")?.toString() ?: properties["minecraft_version"].toString()
-val currentVersionConfig = versions[currentMinecraftVersion] ?: versions["1.21.1"]!!
+val currentVersionConfig = versions[currentMcVersion] ?: versions["1.21.1"]!!
 
 // 动态设置版本相关的属性
 val dynamicMinecraftVersion = currentVersionConfig["minecraft"]!!
@@ -40,7 +40,7 @@ val xaeros_worldmap_version = currentVersionConfig["xaeros_worldmap_version"]!!
 val xaeros_minimap_version = currentVersionConfig["xaeros_minimap_version"]!!
 
 base {
-    archivesName = "${properties["archives_base_name"] as String}-$currentMinecraftVersion"
+    archivesName = "${properties["archives_base_name"] as String}-$currentMcVersion"
     version = properties["mod_version"] as String
     group = properties["maven_group"] as String
 }
@@ -91,7 +91,7 @@ dependencies {
     modImplementation("maven.modrinth:xaeros-world-map:${xaeros_worldmap_version}")
     // XaeroMinimap https://modrinth.com/mod/xaeros-minimap/version/25.2.10_Fabric_1.21
     modImplementation("maven.modrinth:xaeros-minimap:${xaeros_minimap_version}")
-
+    modImplementation("maven.modrinth:litematica:0.19.59")
     modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
 
 
@@ -183,20 +183,34 @@ tasks.register("prepareVersionSpecificSources") {
         val utilDir = file("src/main/java/com/github/mikumiku/addon/util")
         utilDir.mkdirs()
 
-        val sourceFile = when (currentMinecraftVersion) {
-            "1.21.1" -> file("src/main/java/com/github/mikumiku/addon/v1211/Ore.java")
-            "1.21.4" -> file("src/main/java/com/github/mikumiku/addon/v1214/Ore.java")
-            else -> throw GradleException("不支持的版本: $currentMinecraftVersion")
+        val sourceDir = when (currentMcVersion) {
+            "1.21.1" -> file("src/main/java/com/github/mikumiku/addon/v1211")
+            "1.21.4" -> file("src/main/java/com/github/mikumiku/addon/v1214")
+            else -> throw GradleException("不支持的版本: $currentMcVersion")
         }
 
-        if (sourceFile.exists()) {
-            val targetFile = File(utilDir, "Ore.java")
-            val content = sourceFile.readText()
-                .replace("package com.github.mikumiku.addon.v1211;", "package com.github.mikumiku.addon.util;")
-                .replace("package com.github.mikumiku.addon.v1214;", "package com.github.mikumiku.addon.util;")
+        if (sourceDir.exists() && sourceDir.isDirectory) {
+            // 递归复制所有文件
+            sourceDir.walkTopDown().forEach { sourceFile ->
+                if (sourceFile.isFile && sourceFile.extension == "java") {
+                    // 计算相对路径以保持目录结构
+                    val relativePath = sourceFile.relativeTo(sourceDir)
+                    val targetFile = File(utilDir, relativePath.path)
 
-            targetFile.writeText(content)
-            println("已生成版本特定类: ${targetFile.absolutePath}")
+                    // 确保目标目录存在
+                    targetFile.parentFile.mkdirs()
+
+                    // 读取源文件内容并处理package声明
+                    val content = sourceFile.readText()
+                        .replace("package com.github.mikumiku.addon.v1211;", "package com.github.mikumiku.addon.util;")
+                        .replace("package com.github.mikumiku.addon.v1214;", "package com.github.mikumiku.addon.util;")
+
+                    targetFile.writeText(content)
+                    println("已复制并处理版本特定文件: ${sourceFile.name} -> ${targetFile.absolutePath}")
+                }
+            }
+        } else {
+            throw GradleException("版本特定源目录不存在: ${sourceDir.absolutePath}")
         }
     }
 }
@@ -224,7 +238,7 @@ tasks {
 package com.github.mikumiku.addon;
 
 public final class VersionConstants {
-    public static final String MINECRAFT_VERSION = "$currentMinecraftVersion";
+    public static final String MINECRAFT_VERSION = "$currentMcVersion";
     public static final boolean IS_1_21_1 = "1.21.1".equals(MINECRAFT_VERSION);
     public static final boolean IS_1_21_4 = "1.21.4".equals(MINECRAFT_VERSION);
 }
@@ -234,7 +248,7 @@ public final class VersionConstants {
 
         val propertyMap = mapOf(
             "version" to version,
-            "mc_version" to currentMinecraftVersion,
+            "mc_version" to currentMcVersion,
         )
 
         inputs.properties(propertyMap)
