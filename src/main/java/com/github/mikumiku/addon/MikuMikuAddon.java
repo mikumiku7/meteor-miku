@@ -40,6 +40,7 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new LitematicaMover());
         modules.add(new AutoWalk());
         modules.add(new HandsomeSpin());
+        modules.add(new AutoCrystalBlock());
 //        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
 //        MikuModule mikuModule = new MikuModule(CATEGORY, "miku插件", "miku");
         ChatUtils.warning("Miku插件完全开源免费。如果你在别处付费了，那么就当获取信息的费用了。后续更新免费获取地址: https://github.com/mikumiku7/meteor-miku/releases");
