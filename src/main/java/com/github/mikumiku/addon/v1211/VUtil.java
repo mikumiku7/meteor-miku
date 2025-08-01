@@ -42,4 +42,8 @@ public class VUtil {
             onGround
         );
     }
+
+    public static boolean isFallFlying(MinecraftClient mc) {
+        return mc.player.isFallFlying();
+    }
 }

@@ -2,7 +2,6 @@ package com.github.mikumiku.addon.modules;
 
 
 import com.github.mikumiku.addon.BaseModule;
-import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -150,7 +149,7 @@ public class PlayerAlert extends BaseModule {
     private int tickCounter = 0;
 
     public PlayerAlert() {
-        super(MikuMikuAddon.CATEGORY, "玩家提醒", "当有玩家进入附近时播放声音并提醒");
+        super("玩家提醒", "当有玩家进入附近时播放声音并提醒");
     }
 
     @Override

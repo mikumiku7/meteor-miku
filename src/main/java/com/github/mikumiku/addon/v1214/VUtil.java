@@ -39,4 +39,8 @@ public class VUtil {
         );
     }
 
+    public static boolean isFallFlying(MinecraftClient mc) {
+        return mc.player.isGliding();
+    }
+
 }
