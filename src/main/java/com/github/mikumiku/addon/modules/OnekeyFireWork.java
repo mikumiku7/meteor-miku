@@ -1,13 +1,13 @@
 package com.github.mikumiku.addon.modules;
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.util.BagUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Items;
@@ -15,7 +15,7 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.util.Hand;
 
-public class OnekeyFireWork extends Module {
+public class OnekeyFireWork extends BaseModule {
     private int delay;
     private int slotBefore;
     private final SettingGroup sgGeneral;
@@ -66,23 +66,21 @@ public class OnekeyFireWork extends Module {
                 if ("elytra".equals(mc.player.getInventory().getStack(38).getItem().getName())) {
                     if (!(mc.player.getMainHandStack().getItem() instanceof ArmorItem)) {
                         if (mc.player.getMainHandStack().getItem() == Items.FIREWORK_ROCKET) {
-                            Rotations.rotate(mc.player.getYaw(), mc.player.getPitch(), -100, () ->
-                                mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 1, mc.player.getYaw(), mc.player.getPitch())));
+                            firework();
                         } else {
-                            int firework;
-                            if ((firework = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot()) != -1) {
+                            int fireworkSlot;
+                            if ((fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot()) != -1) {
                                 int old = mc.player.getInventory().selectedSlot;
-                                InvUtils.swap(firework, false);
-                                Rotations.rotate(mc.player.getYaw(), mc.player.getPitch(), -100, () ->
-                                    mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 1, mc.player.getYaw(), mc.player.getPitch())));
+                                BagUtil.switchToSlot(fireworkSlot);
+                                firework();
+                                BagUtil.switchToSlot(old);
 
-                                InvUtils.swap(old, false);
                                 mc.getNetworkHandler().sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
-                            } else if ((firework = InvUtils.find(Items.FIREWORK_ROCKET).slot()) != -1) {
-                                InvUtils.move().from(firework).to(mc.player.getInventory().selectedSlot);
-                                Rotations.rotate(mc.player.getYaw(), mc.player.getPitch(), -100, () ->
-                                    mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 1, mc.player.getYaw(), mc.player.getPitch())));
-                                InvUtils.move().from(firework).to(mc.player.getInventory().selectedSlot);
+                            } else if ((fireworkSlot = InvUtils.find(Items.FIREWORK_ROCKET).slot()) != -1) {
+                                BagUtil.inventorySwap(fireworkSlot, mc.player.getInventory().selectedSlot);
+                                firework();
+                                BagUtil.inventorySwap(fireworkSlot, mc.player.getInventory().selectedSlot);
+                                BagUtil.sync();
                             }
                         }
                     }
@@ -91,5 +89,9 @@ public class OnekeyFireWork extends Module {
         } catch (Exception e) {
 
         }
+    }
+
+    private void firework() {
+        BaseModule.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
     }
 }

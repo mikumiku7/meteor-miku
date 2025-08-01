@@ -69,8 +69,11 @@ repositories {
 
     maven { url = uri("https://maven.seedfinding.com/") }
     maven { url = uri("https://maven-snapshots.seedfinding.com/") }
-    maven { url = uri("https://jitpack.io") }
     maven { url = uri("https://maven.duti.dev/releases") }
+    maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://masa.dy.fi/maven") }
+    maven { url = uri("https://maven.terraformersmc.com/releases/") }
+
 }
 
 // Configuration that holds jars to include in the jar
@@ -94,7 +97,8 @@ dependencies {
     modImplementation("maven.modrinth:litematica:0.19.59")
     modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
 
-
+    modImplementation("com.github.sakura-ryoko:malilib:1.21-0.21.9")
+    modImplementation("com.github.sakura-ryoko:litematica:1.21-0.19.59")
 
     extraLibs("dev.duti.acheong:cubiomes:1.22.5") { isTransitive = false }
     extraLibs("dev.duti.acheong:cubiomes:1.22.5:linux64") { isTransitive = false }

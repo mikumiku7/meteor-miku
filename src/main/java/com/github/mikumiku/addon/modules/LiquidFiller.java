@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.util.BagUtil;
+import com.github.mikumiku.addon.util.BaritoneUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -28,29 +30,29 @@ import java.util.List;
 
 public class LiquidFiller extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgWhitelist = settings.createGroup("Whitelist");
+    private final SettingGroup sgWhitelist = settings.createGroup("白名单");
 
     private final HashMap<BlockPos, Long> failedCache = new HashMap<>();
-    private final long cacheDuration = 2000; // 2s in ms
+    private final long cacheDuration = 2000; // 2秒（毫秒）
 
 
     private final Setting<PlaceIn> placeInLiquids = sgGeneral.add(new EnumSetting.Builder<PlaceIn>()
-        .name("place-in")
-        .description("What type of liquids to place in.")
+        .name("放置位置")
+        .description("选择在哪种类型的液体中放置方块。")
         .defaultValue(PlaceIn.Both)
         .build()
     );
 
     private final Setting<Shape> shape = sgGeneral.add(new EnumSetting.Builder<Shape>()
-        .name("shape")
-        .description("The shape of placing algorithm.")
+        .name("形状")
+        .description("放置算法的形状。")
         .defaultValue(Shape.Sphere)
         .build()
     );
 
     private final Setting<Double> placeRange = sgGeneral.add(new DoubleSetting.Builder()
-        .name("place-range")
-        .description("The range at which blocks can be placed.")
+        .name("放置范围")
+        .description("可以放置方块的范围。")
         .defaultValue(4.5)
         .min(0)
         .sliderMax(6)
@@ -58,8 +60,8 @@ public class LiquidFiller extends Module {
     );
 
     private final Setting<Double> placeWallsRange = sgGeneral.add(new DoubleSetting.Builder()
-        .name("walls-range")
-        .description("Range in which to place when behind blocks.")
+        .name("穿墙范围")
+        .description("在方块后面放置时的范围。")
         .defaultValue(3)
         .min(0)
         .sliderMax(6)
@@ -67,16 +69,16 @@ public class LiquidFiller extends Module {
     );
 
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
-        .name("delay")
-        .description("Delay between actions in ticks.")
+        .name("延迟")
+        .description("动作之间的延迟（以游戏刻为单位）。")
         .defaultValue(0)
         .min(0)
         .build()
     );
 
     private final Setting<Integer> maxBlocksPerTick = sgGeneral.add(new IntSetting.Builder()
-        .name("max-blocks-per-tick")
-        .description("Maximum blocks to try to place per tick.")
+        .name("每刻最大方块数")
+        .description("每游戏刻尝试放置的最大方块数。")
         .defaultValue(1)
         .min(1)
         .sliderRange(1, 10)
@@ -84,31 +86,31 @@ public class LiquidFiller extends Module {
     );
 
     private final Setting<SortMode> sortMode = sgGeneral.add(new EnumSetting.Builder<SortMode>()
-        .name("sort-mode")
-        .description("The blocks you want to place first.")
+        .name("排序模式")
+        .description("优先放置方块的顺序。")
         .defaultValue(SortMode.BottomUp)
         .build()
     );
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-        .name("rotate")
-        .description("Automatically rotates towards the space targeted for filling.")
+        .name("自动转向")
+        .description("自动转向目标填充位置。")
         .defaultValue(true)
         .build()
     );
 
-    // Whitelist and blacklist
+    // 白名单和黑名单
 
     private final Setting<ListMode> listMode = sgWhitelist.add(new EnumSetting.Builder<ListMode>()
-        .name("list-mode")
-        .description("Selection mode.")
+        .name("列表模式")
+        .description("选择模式。")
         .defaultValue(ListMode.Whitelist)
         .build()
     );
 
     private final Setting<List<Block>> whitelist = sgWhitelist.add(new BlockListSetting.Builder()
-        .name("whitelist")
-        .description("The allowed blocks that it will use to fill up the liquid.")
+        .name("白名单")
+        .description("允许用来填充液体的方块。")
         .defaultValue(
             Blocks.DIRT,
             Blocks.COBBLESTONE,
@@ -116,6 +118,7 @@ public class LiquidFiller extends Module {
             Blocks.NETHERRACK,
             Blocks.DIORITE,
             Blocks.GRANITE,
+            Blocks.SLIME_BLOCK,
             Blocks.ANDESITE
         )
         .visible(() -> listMode.get() == ListMode.Whitelist)
@@ -123,8 +126,8 @@ public class LiquidFiller extends Module {
     );
 
     private final Setting<List<Block>> blacklist = sgWhitelist.add(new BlockListSetting.Builder()
-        .name("blacklist")
-        .description("The denied blocks that it not will use to fill up the liquid.")
+        .name("黑名单")
+        .description("禁止用来填充液体的方块。")
         .visible(() -> listMode.get() == ListMode.Blacklist)
         .build()
     );
@@ -145,7 +148,7 @@ public class LiquidFiller extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        // Update timer according to delay
+        // 根据延迟更新计时器
         if (timer < delay.get()) {
             timer++;
             return;
@@ -153,12 +156,12 @@ public class LiquidFiller extends Module {
             timer = 0;
         }
 
-        // Calculate some stuff
+        // 计算一些数据
         double pX = mc.player.getX();
         double pY = mc.player.getY();
         double pZ = mc.player.getZ();
 
-        // Find slot with a block
+        // 查找包含方块的槽位
         FindItemResult item;
         if (listMode.get() == ListMode.Whitelist) {
             item = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && whitelist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
@@ -169,40 +172,40 @@ public class LiquidFiller extends Module {
 
         long now = System.currentTimeMillis();
 
-        // Loop blocks around the player
+        // 遍历玩家周围的方块
         BlockIterator.register((int) Math.ceil(placeRange.get() + 1), (int) Math.ceil(placeRange.get()), (blockPos, blockState) -> {
 
-            // Skip failed cache
+            // 跳过失败缓存
             if (failedCache.containsKey(blockPos)) {
                 if (now - failedCache.get(blockPos) < cacheDuration) return;
                 else failedCache.remove(blockPos);
             }
 
-            // Check raycast and range
+            // 检查射线投射和范围
             if (isOutOfRange(blockPos)) return;
 
-            // Check if the block is a source block and set to be filled
+            // 检查方块是否为液体源方块并设置为待填充
             Fluid fluid = blockState.getFluidState().getFluid();
             if ((placeInLiquids.get() == PlaceIn.Both && (fluid != Fluids.WATER && fluid != Fluids.LAVA))
                 || (placeInLiquids.get() == PlaceIn.Water && fluid != Fluids.WATER)
                 || (placeInLiquids.get() == PlaceIn.Lava && fluid != Fluids.LAVA))
                 return;
 
-            // Check if the player can place at pos
+            // 检查玩家是否可以在该位置放置方块
             if (!BlockUtils.canPlace(blockPos)) return;
 
-            // Add block
+            // 添加方块
             blocks.add(blockPos.mutableCopy());
         });
 
         BlockIterator.after(() -> {
-            // Sort blocks
+            // 排序方块
             if (sortMode.get() == SortMode.TopDown || sortMode.get() == SortMode.BottomUp)
                 blocks.sort(Comparator.comparingDouble(value -> value.getY() * (sortMode.get() == SortMode.BottomUp ? 1 : -1)));
             else if (sortMode.get() != SortMode.None)
                 blocks.sort(Comparator.comparingDouble(value -> Utils.squaredDistance(pX, pY, pZ, value.getX() + 0.5, value.getY() + 0.5, value.getZ() + 0.5) * (sortMode.get() == SortMode.Closest ? 1 : -1)));
 
-            // Place and clear place positions
+            // 放置方块并清除放置位置
             int count = 0;
             for (BlockPos pos : blocks) {
                 if (count >= maxBlocksPerTick.get()) {
@@ -215,7 +218,10 @@ public class LiquidFiller extends Module {
                     continue; // 跳过该位置
                 }
 
-                BlockUtils.place(pos, item, rotate.get(), 0, true);
+
+                BagUtil.doSwap(item.slot());
+                BaritoneUtil.placeBlock(pos, true, true, true);
+                BagUtil.doSwap(item.slot());
 
                 failedCache.put(pos, System.currentTimeMillis());
 
@@ -226,27 +232,71 @@ public class LiquidFiller extends Module {
     }
 
     public enum ListMode {
-        Whitelist,
-        Blacklist
+        Whitelist("白名单"),
+        Blacklist("黑名单");
+
+        private final String displayName;
+
+        ListMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
     }
 
     public enum PlaceIn {
-        Both,
-        Water,
-        Lava
+        Both("水和岩浆"),
+        Water("仅水"),
+        Lava("仅岩浆");
+
+        private final String displayName;
+
+        PlaceIn(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
     }
 
     public enum SortMode {
-        None,
-        Closest,
-        Furthest,
-        TopDown,
-        BottomUp
+        None("无排序"),
+        Closest("最近优先"),
+        Furthest("最远优先"),
+        TopDown("从上到下"),
+        BottomUp("从下到上");
+
+        private final String displayName;
+
+        SortMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
     }
 
     public enum Shape {
-        Sphere,
-        UniformCube
+        Sphere("球形"),
+        UniformCube("立方体");
+
+        private final String displayName;
+
+        Shape(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
     }
 
     private boolean isOutOfRange(BlockPos blockPos) {
@@ -261,7 +311,7 @@ public class LiquidFiller extends Module {
     }
 
     private boolean isWithinShape(BlockPos blockPos, double range) {
-        // Cube shape
+        // 立方体形状
         if (shape.get() == Shape.UniformCube) {
             BlockPos playerBlockPos = mc.player.getBlockPos();
             double dX = Math.abs(blockPos.getX() - playerBlockPos.getX());
@@ -271,7 +321,7 @@ public class LiquidFiller extends Module {
             return maxDist <= Math.floor(range);
         }
 
-        // Spherical shape
+        // 球形形状
         return PlayerUtils.isWithin(blockPos.toCenterPos(), range);
     }
 

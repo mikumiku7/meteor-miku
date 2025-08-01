@@ -1,9 +1,11 @@
 package com.github.mikumiku.addon.modules;
 
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -19,7 +21,7 @@ import java.util.Set;
  * 玩家提醒模块
  * 当有玩家进入设定范围时播放声音并发送聊天提醒
  */
-public class PlayerAlert extends MikuModule {
+public class PlayerAlert extends BaseModule {
 
 
     /**
@@ -43,6 +45,12 @@ public class PlayerAlert extends MikuModule {
     // 用于跟踪已知玩家，避免重复提醒
     private final Set<String> knownPlayers = new HashSet<>();
 
+    // 用于跟踪视距内的玩家
+    private final Set<String> playersInRenderDistance = new HashSet<>();
+
+    // 用于跟踪靠近检测距离内的玩家
+    private final Set<String> playersInCloseRange = new HashSet<>();
+
     // 模块设置
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSound = settings.createGroup("声音设置");
@@ -50,8 +58,8 @@ public class PlayerAlert extends MikuModule {
 
     // 通用设置
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-        .name("检测距离")
-        .description("检测玩家的最大距离")
+        .name("靠近检测距离")
+        .description("检测玩家的靠近")
         .defaultValue(50.0)
         .min(5.0)
         .max(200.0)
@@ -71,16 +79,9 @@ public class PlayerAlert extends MikuModule {
         .build()
     );
 
-    private final Setting<Boolean> ignoreInvisible = sgGeneral.add(new BoolSetting.Builder()
-        .name("跳过隐身玩家")
-        .description("是否忽略隐身状态的玩家")
-        .defaultValue(false)
-        .build()
-    );
-
     private final Setting<Boolean> onlyHostile = sgGeneral.add(new BoolSetting.Builder()
-        .name("仅敌对玩家")
-        .description("只提醒非队友玩家(需要其他模组支持)")
+        .name("仅非队友玩家")
+        .description("只提醒非队友玩家")
         .defaultValue(false)
         .build()
     );
@@ -105,9 +106,9 @@ public class PlayerAlert extends MikuModule {
         .description("声音播放音量")
         .defaultValue(1.0d)
         .min(0.1d)
-        .max(2.0d)
+        .max(10.0d)
         .sliderMin(0.1d)
-        .sliderMax(2.0d)
+        .sliderMax(10.0d)
         .build()
     );
 
@@ -155,23 +156,31 @@ public class PlayerAlert extends MikuModule {
     @Override
     public void onActivate() {
         knownPlayers.clear();
+        playersInRenderDistance.clear();
+        playersInCloseRange.clear();
         tickCounter = 0;
-        info("玩家提醒模块已启动，检测距离: %.1f 格", range.get());
+        info("玩家提醒模块已启动，靠近检测距离: %.1f 格", range.get());
     }
 
     @Override
     public void onDeactivate() {
         knownPlayers.clear();
+        playersInRenderDistance.clear();
+        playersInCloseRange.clear();
         info("玩家提醒模块已关闭");
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) return;
+
+        if (mc == null || mc.player == null || mc.world == null) return;
 
         // 控制检测频率
         tickCounter++;
-        if (tickCounter < checkInterval.get()) return;
+        if (tickCounter < checkInterval.get()) {
+            return;
+        }
+
         tickCounter = 0;
 
         checkForPlayers();
@@ -181,42 +190,78 @@ public class PlayerAlert extends MikuModule {
      * 检测附近的玩家
      */
     private void checkForPlayers() {
-        Set<String> currentPlayers = new HashSet<>();
+        Set<String> currentRenderDistancePlayers = new HashSet<>();
+        Set<String> currentCloseRangePlayers = new HashSet<>();
 
-        // 遍历世界中的所有玩家
+//        for (Entity entity : mc.world.getEntities()) {
+//            if (entity instanceof PlayerEntity player && !player.getUuid().equals(mc.player.getUuid())) {
+//
+//
+//                String playerName = player.getGameProfile().getName();
+//                double distance = mc.player.distanceTo(player);
+//                boolean within = PlayerUtils.isWithin(entity, 8);
+//
+//                boolean friend = Friends.get().isFriend(player);
+//
+//
+//            }
+//        }
+
+        // 遍历世界中的所有玩家 (视距内的玩家)
         for (PlayerEntity player : mc.world.getPlayers()) {
             // 跳过自己
-            if (player == mc.player) continue;
+            if (player.getUuid().equals(mc.player.getUuid())) {
+                continue;
+            }
 
             String playerName = player.getGameProfile().getName();
             double distance = mc.player.distanceTo(player);
 
-            // 检查距离
-            if (distance > range.get()) continue;
-
-            // 检查是否隐身
-            if (ignoreInvisible.get() && player.isInvisible()) continue;
-
-            // 检查是否为敌对玩家(这里只是示例，实际需要根据具体需求实现)
+            // 检查是否为敌对玩家
             if (onlyHostile.get() && isFriendly(player)) continue;
 
-            currentPlayers.add(playerName);
+            // 所有视距内的玩家
+            currentRenderDistancePlayers.add(playerName);
 
-            // 如果是新发现的玩家，触发提醒
-            if (!knownPlayers.contains(playerName)) {
-                alertPlayer(player, distance);
+            // 检查是否进入视距 (新玩家)
+            if (!playersInRenderDistance.contains(playerName)) {
+                alertPlayerEnterRenderDistance(player, distance);
+            }
+
+            // 检查是否在靠近检测距离内
+            if (distance <= range.get()) {
+                currentCloseRangePlayers.add(playerName);
+
+                // 检查是否进入靠近检测距离 (新玩家进入靠近范围)
+                if (!playersInCloseRange.contains(playerName)) {
+                    alertPlayerEnterCloseRange(player, distance);
+                }
             }
         }
 
-        // 更新已知玩家列表
+        // 检查离开视距的玩家
+        for (String playerName : playersInRenderDistance) {
+            if (!currentRenderDistancePlayers.contains(playerName)) {
+                alertPlayerLeaveRenderDistance(playerName);
+            }
+        }
+
+        // 更新玩家列表
+        playersInRenderDistance.clear();
+        playersInRenderDistance.addAll(currentRenderDistancePlayers);
+
+        playersInCloseRange.clear();
+        playersInCloseRange.addAll(currentCloseRangePlayers);
+
+        // 保持向后兼容性
         knownPlayers.clear();
-        knownPlayers.addAll(currentPlayers);
+        knownPlayers.addAll(currentCloseRangePlayers);
     }
 
     /**
-     * 触发玩家提醒
+     * 玩家进入视距提醒
      */
-    private void alertPlayer(PlayerEntity player, double distance) {
+    private void alertPlayerEnterRenderDistance(PlayerEntity player, double distance) {
         String playerName = player.getGameProfile().getName();
 
         // 播放声音
@@ -226,11 +271,40 @@ public class PlayerAlert extends MikuModule {
 
         // 聊天框提醒
         if (chatAlert.get()) {
-            sendChatAlert(player, distance);
+            sendChatAlert(player, distance, "进入视距");
+        }
+    }
+
+    /**
+     * 玩家离开视距提醒
+     */
+    private void alertPlayerLeaveRenderDistance(String playerName) {
+        // 播放声音
+        if (playSound.get()) {
+            playAlertSound();
         }
 
-        // 控制台日志
-        info("检测到玩家: %s (距离: %.1f)", playerName, distance);
+        // 聊天框提醒
+        if (chatAlert.get()) {
+            sendChatAlertLeave(playerName, "离开视距");
+        }
+    }
+
+    /**
+     * 玩家进入靠近检测距离提醒
+     */
+    private void alertPlayerEnterCloseRange(PlayerEntity player, double distance) {
+        String playerName = player.getGameProfile().getName();
+
+        // 播放声音
+        if (playSound.get()) {
+            playAlertSound();
+        }
+
+        // 聊天框提醒
+        if (chatAlert.get()) {
+            sendChatAlert(player, distance, "进入靠近范围");
+        }
     }
 
     /**
@@ -247,13 +321,13 @@ public class PlayerAlert extends MikuModule {
     }
 
     /**
-     * 发送聊天提醒
+     * 发送聊天提醒 (进入)
      */
-    private void sendChatAlert(PlayerEntity player, double distance) {
+    private void sendChatAlert(PlayerEntity player, double distance, String alertType) {
         String playerName = player.getGameProfile().getName();
         StringBuilder message = new StringBuilder();
 
-        message.append("§c[玩家提醒] §f检测到玩家: §e").append(playerName);
+        message.append("§c[玩家提醒] §f").append(alertType).append(": §e").append(playerName);
 
         if (showDistance.get()) {
             message.append(" §7(距离: §a").append(String.format("%.1f", distance)).append("§7)");
@@ -271,17 +345,24 @@ public class PlayerAlert extends MikuModule {
     }
 
     /**
+     * 发送聊天提醒 (离开)
+     */
+    private void sendChatAlertLeave(String playerName, String alertType) {
+        StringBuilder message = new StringBuilder();
+        message.append("§c[玩家提醒] §f").append(alertType).append(": §e").append(playerName);
+
+        // 发送本地聊天消息
+        ChatUtils.info(message.toString());
+    }
+
+    /**
      * 判断玩家是否为友好玩家
-     * 这里只是示例实现，实际应用中需要根据具体需求实现
      */
     private boolean isFriendly(PlayerEntity player) {
-        // 示例：可以基于队伍、公会、朋友列表等判断
-        // 目前简单地将所有玩家都视为敌对玩家（除非在同一个队伍中）
-        // 如果玩家在同一队伍中，则认为是友好的
-        if (mc.player != null && mc.player.isTeammate(player)) {
-            return true;
-        }
-        return false;
+
+        boolean friend = Friends.get().isFriend(player);
+
+        return friend;
     }
 
     /**
@@ -300,6 +381,8 @@ public class PlayerAlert extends MikuModule {
      */
     public void refreshPlayerList() {
         knownPlayers.clear();
+        playersInRenderDistance.clear();
+        playersInCloseRange.clear();
         info("已刷新玩家列表");
     }
 }

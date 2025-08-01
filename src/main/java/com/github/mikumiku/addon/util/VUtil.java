@@ -5,6 +5,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
@@ -17,8 +18,25 @@ public class VUtil {
         return EnchantmentHelper.getEnchantedBookWith(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
     }
 
-    public static Registry<Enchantment> getEnchantmentRegistry( ) {
+    public static Registry<Enchantment> getEnchantmentRegistry() {
         DynamicRegistryManager registryManager = MinecraftClient.getInstance().world.getRegistryManager();
         return registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
     }
+
+
+    public static PlayerMoveC2SPacket.LookAndOnGround get(float currentYaw, float pitch, boolean onGround) {
+        return new PlayerMoveC2SPacket.LookAndOnGround(currentYaw, pitch, onGround, false);
+    }
+
+    public static PlayerMoveC2SPacket.Full getFull(double x, double y, double z, float yaw, float pitch, boolean onGround) {
+        return new PlayerMoveC2SPacket.Full(
+            x,
+            y,
+            z,
+            yaw,
+            pitch,
+            onGround, false
+        );
+    }
+
 }

@@ -3,6 +3,7 @@ package com.github.mikumiku.addon.modules;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -14,10 +15,14 @@ import static com.github.mikumiku.addon.util.ChatUtils.sendMsg;
 public class MikuModule extends Module {
     private boolean active;
     private final int priority;
+    protected MinecraftClient mc = MinecraftClient.getInstance();
+
 
     public MikuModule(Category Category, String name, String desc) {
         super(Category, name, desc);
         this.priority = 100;
+        mc = MinecraftClient.getInstance();
+
     }
 
     public void sendToggledMsg() {
