@@ -149,7 +149,6 @@ public class Ore {
         this.color = color;
         int bottom = MinecraftClient.getInstance().world.getBottomY();
         int height = MinecraftClient.getInstance().world.getDimension().logicalHeight();
-        ChunkGenerators.registerAndGetDefault()
         this.heightContext = new HeightContext(null, HeightLimitView.create(bottom, height));
 
         for (PlacementModifier modifier : feature.placementModifiers()) {

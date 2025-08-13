@@ -158,7 +158,7 @@
 1.  前往本项目的 **[Releases](https://github.com/mikumiku7/meteor-miku/releases)** 页面。 
 2.  下载最新版本的 `.jar` 文件。
 3.  将下载的 `.jar` 文件放入您 Minecraft 游戏目录下的 `mods` 文件夹。
-4.  确保您已经安装了 Meteor Client 和 Fabric Loader。
+4.  确保您已经安装了 Meteor Client 和 https://github.com/xingke0/meteor_chinese。
 5.  启动游戏。
 
 ## 🚀 使用方法
@@ -222,5 +222,4 @@ https://github.com/JFronny/MeteorAdditions
 https://github.com/RedCarlos26/HIGTools
 
 https://github.com/maxsupermanhd/meteor-villager-roller
-
 
