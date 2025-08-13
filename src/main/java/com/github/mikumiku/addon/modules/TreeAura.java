@@ -224,7 +224,15 @@ public class TreeAura extends BaseModule {
     private boolean canPlant(BlockPos pos) {
         Block b = MinecraftClient.getInstance().world.getBlockState(pos).getBlock();
         // 只能在草方块、泥土等允许种植的地方种植
-        if (b.equals(Blocks.SHORT_GRASS) || b.equals(Blocks.GRASS_BLOCK) || b.equals(Blocks.DIRT) || b.equals(Blocks.COARSE_DIRT)) {
+        if (b.equals(Blocks.GRASS_BLOCK)
+                || b.equals(Blocks.MOSS_BLOCK)
+                || b.equals(Blocks.PODZOL)
+                || b.equals(Blocks.ROOTED_DIRT)
+                || b.equals(Blocks.FARMLAND)
+                || b.equals(Blocks.DIRT_PATH)
+                || b.equals(Blocks.MYCELIUM)
+                || b.equals(Blocks.DIRT)
+                || b.equals(Blocks.COARSE_DIRT)) {
 
             // 检查设定间隔范围内是否有树苗或树干，确保间隔符合设置
             // 检查位置是在方块上面一格（树苗种植位置）及其周围

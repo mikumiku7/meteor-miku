@@ -6,6 +6,7 @@ import com.github.mikumiku.addon.mixin.RarityFilterPlacementModifierAccessor;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.world.ChunkIterator;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.BuiltinRegistries;
@@ -21,6 +22,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.WorldPresets;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.ChunkGenerators;
 import net.minecraft.world.gen.feature.*;
 import net.minecraft.world.gen.feature.util.PlacedFeatureIndexer;
 import net.minecraft.world.gen.heightprovider.HeightProvider;
@@ -146,6 +149,7 @@ public class Ore {
         this.color = color;
         int bottom = MinecraftClient.getInstance().world.getBottomY();
         int height = MinecraftClient.getInstance().world.getDimension().logicalHeight();
+        ChunkGenerators.registerAndGetDefault()
         this.heightContext = new HeightContext(null, HeightLimitView.create(bottom, height));
 
         for (PlacementModifier modifier : feature.placementModifiers()) {

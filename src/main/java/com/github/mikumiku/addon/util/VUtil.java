@@ -2,10 +2,9 @@ package com.github.mikumiku.addon.util;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
-import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
@@ -16,21 +15,18 @@ import java.util.Optional;
 
 public class VUtil {
     public static ItemStack getEnchantedBookWith(Optional<RegistryEntry.Reference<Enchantment>> en) {
-
-
-        return EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
+        return EnchantmentHelper.getEnchantedBookWith(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
     }
-    public static Registry<Enchantment> getEnchantmentRegistry( ) {
+
+    public static Registry<Enchantment> getEnchantmentRegistry() {
         DynamicRegistryManager registryManager = MinecraftClient.getInstance().world.getRegistryManager();
-        return registryManager.get(RegistryKeys.ENCHANTMENT);
+        return registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
     }
-
 
 
     public static PlayerMoveC2SPacket.LookAndOnGround get(float currentYaw, float pitch, boolean onGround) {
-        return new PlayerMoveC2SPacket.LookAndOnGround(currentYaw, pitch, onGround);
+        return new PlayerMoveC2SPacket.LookAndOnGround(currentYaw, pitch, onGround, false);
     }
-
 
     public static PlayerMoveC2SPacket.Full getFull(double x, double y, double z, float yaw, float pitch, boolean onGround) {
         return new PlayerMoveC2SPacket.Full(
@@ -39,11 +35,12 @@ public class VUtil {
             z,
             yaw,
             pitch,
-            onGround
+            onGround, false
         );
     }
 
     public static boolean isFallFlying(MinecraftClient mc) {
-        return mc.player.isFallFlying();
+        return mc.player.isGliding();
     }
+
 }

@@ -49,6 +49,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.s2c.play.SetTradeOffersS2CPacket;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
@@ -623,6 +624,32 @@ public class VillagerRoller extends Module {
         return e.isIn(EnchantmentTags.DOUBLE_TRADE_PRICE) ? (2 + 3 * e.value().getMaxLevel()) * 2 : 2 + 3 * e.value().getMaxLevel();
     }
 
+    /**
+     * 获取所有附魔ID及其最大等级
+     *
+     * @return Map<String, Integer> 附魔ID字符串到最大等级的映射
+     */
+    public Map<String, Integer> getAllEnchantmentsWithMaxLevel() {
+        Map<String, Integer> enchantments = new HashMap<>();
+
+        if (mc.world == null) {
+            return enchantments;
+        }
+
+        Optional<Registry<Enchantment>> reg = mc.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT);
+        if (reg.isEmpty()) {
+            return enchantments;
+        }
+
+        for (Map.Entry<RegistryKey<Enchantment>, Enchantment> entry : reg.get().getEntrySet()) {
+            String enchantmentId = entry.getKey().getValue().toString();
+            int maxLevel = entry.getValue().getMaxLevel();
+            enchantments.put(enchantmentId, maxLevel);
+        }
+
+        return enchantments;
+    }
+
     private long waitingForTradesTicks = 0;
 
     public void triggerInteract() {
@@ -671,7 +698,7 @@ public class VillagerRoller extends Module {
 
             for (Pair<RegistryEntry<Enchantment>, Integer> enchant : getEnchants(sellItem)) {
                 int enchantLevel = enchant.right();
-                var reg = VUtil.getEnchantmentRegistry( );
+                var reg = VUtil.getEnchantmentRegistry();
 
                 String enchantIdString = reg.getId(enchant.key().value()).toString();
                 String enchantName = Names.get(enchant.key());

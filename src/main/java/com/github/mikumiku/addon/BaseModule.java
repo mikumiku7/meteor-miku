@@ -49,7 +49,14 @@ public abstract class BaseModule extends Module {
         super(MikuMikuAddon.CATEGORY, name, desc);
     }
 
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        if (mc == null) {
+            mc = MinecraftClient.getInstance();
+        }
 
+    }
 
     public void sendToggledMsg() {
         Text onMsg = Text.empty().setStyle(Style.EMPTY.withFormatting(Formatting.GREEN)).append("ON");
@@ -68,7 +75,7 @@ public abstract class BaseModule extends Module {
     public static void sendSequencedPacket(SequencedPacketCreator packetCreator) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.getNetworkHandler() == null || mc.world == null) return;
-        try (PendingUpdateManager pendingUpdateManager = ((IClientWorld) mc.world).getPendingManager().incrementSequence()){
+        try (PendingUpdateManager pendingUpdateManager = ((IClientWorld) mc.world).getPendingManager().incrementSequence()) {
             int i = pendingUpdateManager.getSequence();
             mc.getNetworkHandler().sendPacket(packetCreator.predict(i));
         }
