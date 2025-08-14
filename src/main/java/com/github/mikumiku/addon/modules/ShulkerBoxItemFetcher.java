@@ -31,20 +31,20 @@ import net.minecraft.util.math.Vec3d;
 
 public class ShulkerBoxItemFetcher extends BaseModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgSettings = settings.createGroup("Settings");
+    private final SettingGroup sgSettings = settings.createGroup("设置");
     IBaritone baritone;
 
     // Settings
     private final Setting<Item> targetItem = sgGeneral.add(new ItemSetting.Builder()
-        .name("target-item")
-        .description("The item to fetch from shulker boxes.")
+        .name("目标物品")
+        .description("要从潜影盒中获取的物品。")
         .defaultValue(Items.COBBLESTONE)
         .build()
     );
 
     private final Setting<Integer> delay = sgSettings.add(new IntSetting.Builder()
-        .name("delay")
-        .description("Delay between actions in ticks.")
+        .name("延迟")
+        .description("操作之间的延迟（tick）。")
         .defaultValue(2)
         .min(1)
         .max(20)
@@ -52,29 +52,29 @@ public class ShulkerBoxItemFetcher extends BaseModule {
     );
 
     private final Setting<Boolean> autoClose = sgSettings.add(new BoolSetting.Builder()
-        .name("auto-close")
-        .description("Automatically close the module when finished.")
+        .name("自动关闭")
+        .description("完成后自动关闭模块。")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<Boolean> logActions = sgSettings.add(new BoolSetting.Builder()
-        .name("log-actions")
-        .description("Log actions to chat.")
+        .name("记录操作")
+        .description("在聊天栏记录操作日志。")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<Boolean> debugMode = sgSettings.add(new BoolSetting.Builder()
-        .name("debug-mode")
-        .description("Enable detailed debug logging.")
+        .name("调试模式")
+        .description("启用详细的调试日志。")
         .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> autoRotate = sgSettings.add(new BoolSetting.Builder()
-        .name("auto-rotate")
-        .description("Automatically rotate to look at blocks when interacting.")
+        .name("自动转头")
+        .description("交互时自动转头看向方块。")
         .defaultValue(true)
         .build()
     );
@@ -109,13 +109,13 @@ public class ShulkerBoxItemFetcher extends BaseModule {
     @Override
     public void onActivate() {
         if (mc.player == null || mc.world == null) {
-            if (logActions.get()) error("Player or world is null!");
+            if (logActions.get()) error("玩家或世界为空！");
             toggle();
             return;
         }
 
         if (PathManagers.get() instanceof NopPathManager) {
-            info("需要 Baritone");
+            info("需要 Baritone 自动寻路");
             toggle();
             return;
         }
@@ -157,14 +157,14 @@ public class ShulkerBoxItemFetcher extends BaseModule {
         stateTimeout++;
         if (stateTimeout > MAX_STATE_TIMEOUT) {
             if (logActions.get()) {
-                error("状态超时: " + currentState.name() + " (已等待 " + stateTimeout + " ticks)");
+                error("状态超时: " + currentState.name() + " (已等待 " + stateTimeout + " 刻)");
             }
             changeState(State.FINISHED);
             return;
         }
 
         if (debugMode.get()) {
-            info("当前状态: " + currentState.name() + " (Tick: " + tickCounter + ", Timeout: " + stateTimeout + ")");
+            info("当前状态: " + currentState.name() + " (Tick: " + tickCounter + ", 超时: " + stateTimeout + ")");
         }
 
         switch (currentState) {
@@ -268,21 +268,64 @@ public class ShulkerBoxItemFetcher extends BaseModule {
     }
 
     private BlockPos findSuitablePlacePosition(BlockPos playerPos) {
-        // Search from near to far using distance-based approach
+        // Get player's facing direction
+        Direction playerFacing = mc.player.getHorizontalFacing();
+
+        // Priority order: facing direction first, then adjacent sides, then diagonals
+        // 1. First try the direction player is facing
+        BlockPos facingPos = playerPos.offset(playerFacing);
+        if (isValidPlacePosition(facingPos)) {
+            if (debugMode.get()) {
+                info("找到合适位置(面朝方向): " + facingPos.toShortString());
+            }
+            return facingPos;
+        }
+
+        // 2. Try adjacent horizontal directions (not diagonal)
+        Direction[] adjacentDirections = {
+            playerFacing.rotateYClockwise(),
+            playerFacing.rotateYCounterclockwise(),
+            playerFacing.getOpposite()
+        };
+
+        for (Direction dir : adjacentDirections) {
+            BlockPos testPos = playerPos.offset(dir);
+            if (isValidPlacePosition(testPos)) {
+                if (debugMode.get()) {
+                    info("找到合适位置(相邻方向): " + testPos.toShortString());
+                }
+                return testPos;
+            }
+        }
+
+        // 3. Try above and below current position
+        for (int y = 1; y >= -1; y -= 2) { // +1 then -1
+            BlockPos testPos = playerPos.add(0, y, 0);
+            if (isValidPlacePosition(testPos)) {
+                if (debugMode.get()) {
+                    info("找到合适位置(上下方向): " + testPos.toShortString());
+                }
+                return testPos;
+            }
+        }
+
+        // 4. Finally try diagonal positions if no direct adjacent positions work
         for (int distance = 1; distance <= 3; distance++) {
             for (int x = -distance; x <= distance; x++) {
                 for (int z = -distance; z <= distance; z++) {
+                    // Skip positions we already checked (direct adjacent)
+                    if ((Math.abs(x) == 1 && z == 0) || (x == 0 && Math.abs(z) == 1) || (x == 0 && z == 0)) {
+                        continue;
+                    }
+
                     // Only check positions at the current distance boundary
                     if (Math.abs(x) == distance || Math.abs(z) == distance) {
                         for (int y = -1; y <= 1; y++) {
                             BlockPos testPos = playerPos.add(x, y, z);
-                            if (mc.world.getBlockState(testPos).isAir() &&
-                                BlockUtils.canPlace(testPos) &&
-                                !mc.world.getBlockState(testPos.down()).isAir()) {
-
+                            if (isValidPlacePosition(testPos)) {
                                 if (debugMode.get()) {
                                     double dist = Math.sqrt(x * x + y * y + z * z);
-                                    info("找到合适位置: " + testPos.toShortString() + " (距离: " + String.format("%.1f", dist) + ")");
+                                    info("找到合适位置(对角线): " + testPos.toShortString() + " (距离: " + String.format("%.1f", dist) + ")");
                                 }
                                 return testPos;
                             }
@@ -296,6 +339,12 @@ public class ShulkerBoxItemFetcher extends BaseModule {
             error("在3格范围内未找到合适的放置位置");
         }
         return null;
+    }
+
+    private boolean isValidPlacePosition(BlockPos pos) {
+        return mc.world.getBlockState(pos).isAir() &&
+               BlockUtils.canPlace(pos) &&
+               !mc.world.getBlockState(pos.down()).isAir();
     }
 
     private void moveItemToHotbar(int sourceSlot) {
@@ -575,7 +624,7 @@ public class ShulkerBoxItemFetcher extends BaseModule {
 //        mc.player.setPitch(pitch);
         Rotations.rotate(yaw, pitch);
         if (debugMode.get()) {
-            info("转头看向方块: " + pos.toShortString() + " (Yaw: " + String.format("%.1f", yaw) + ", Pitch: " + String.format("%.1f", pitch) + ")");
+            info("转头看向方块: " + pos.toShortString() + " (偏航: " + String.format("%.1f", yaw) + ", 俯仰: " + String.format("%.1f", pitch) + ")");
         }
     }
 }
