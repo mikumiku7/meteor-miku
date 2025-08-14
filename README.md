@@ -203,6 +203,8 @@
 
 参考或者借鉴了下面的这些， 感谢他们
 
+https://anticope.pages.dev/addons/
+
 裤子条纹
 
 https://github.com/etianl/Trouser-Streak/releases
@@ -217,11 +219,12 @@ https://github.com/AntiCope/meteor-rejects
 
 https://github.com/xingke0/meteor_chinese
 
-https://anticope.pages.dev/addons/
-
 https://github.com/JFronny/MeteorAdditions
 
 https://github.com/RedCarlos26/HIGTools
 
 https://github.com/maxsupermanhd/meteor-villager-roller
 
+https://github.com/KassuK1/BlackOut
+
+https://github.com/iM4dCat/Alien

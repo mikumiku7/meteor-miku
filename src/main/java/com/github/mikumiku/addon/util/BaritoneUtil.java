@@ -2,6 +2,7 @@ package com.github.mikumiku.addon.util;
 
 import com.github.mikumiku.addon.BaseModule;
 import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -32,10 +33,14 @@ import java.util.Set;
  * @author MikuMiku
  */
 public class BaritoneUtil {
-    /** Minecraft 客户端实例 */
+    /**
+     * Minecraft 客户端实例
+     */
     public static MinecraftClient mc = MinecraftClient.getInstance();
 
-    /** 需要潜行才能交互的方块列表 */
+    /**
+     * 需要潜行才能交互的方块列表
+     */
     public static final List<Block> SneakBlocks = Arrays.asList(
         Blocks.ENDER_CHEST,
         Blocks.CHEST,
@@ -70,7 +75,9 @@ public class BaritoneUtil {
         Blocks.SCAFFOLDING
     );
 
-    /** 需要潜行才能交互的方块类列表 */
+    /**
+     * 需要潜行才能交互的方块类列表
+     */
     public static final List<Class> SneakBlockClass = Arrays.asList(SignBlock.class, HangingSignBlock.class, WallSignBlock.class);
 
     /**
@@ -86,7 +93,7 @@ public class BaritoneUtil {
     /**
      * 检查指定位置是否可以放置方块，支持严格方向检查
      *
-     * @param pos 要检查的方块位置
+     * @param pos             要检查的方块位置
      * @param strictDirection 是否启用严格方向检查
      * @return 如果可以放置方块则返回 true，否则返回 false
      */
@@ -117,9 +124,9 @@ public class BaritoneUtil {
     /**
      * 检查在指定条件下是否可以放置方块
      *
-     * @param pos 要检查的方块位置
+     * @param pos             要检查的方块位置
      * @param strictDirection 是否启用严格方向检查
-     * @param direction 指定的方向
+     * @param direction       指定的方向
      * @return 如果满足条件可以放置方块则返回 true，否则返回 false
      */
     public static boolean canPlaceIf(BlockPos pos, boolean strictDirection, Direction direction) {
@@ -139,10 +146,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置放置方块，支持自定义参数
      *
-     * @param pos 要放置方块的位置
+     * @param pos             要放置方块的位置
      * @param strictDirection 是否启用严格方向检查
-     * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param clientSwing     是否在客户端显示挥手动画
+     * @param rotate          是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeBlock(BlockPos pos, boolean strictDirection, boolean clientSwing, boolean rotate) {
@@ -158,10 +165,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置向上放置方块（适用于台阶等方块）
      *
-     * @param pos 要放置方块的位置
+     * @param pos             要放置方块的位置
      * @param strictDirection 是否启用严格方向检查
-     * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param clientSwing     是否在客户端显示挥手动画
+     * @param rotate          是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeUpBlock(BlockPos pos, boolean strictDirection, boolean clientSwing, boolean rotate) {
@@ -177,10 +184,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置向下放置方块（适用于台阶等方块）
      *
-     * @param pos 要放置方块的位置
+     * @param pos             要放置方块的位置
      * @param strictDirection 是否启用严格方向检查
-     * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param clientSwing     是否在客户端显示挥手动画
+     * @param rotate          是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeDownBlock(BlockPos pos, boolean strictDirection, boolean clientSwing, boolean rotate) {
@@ -198,7 +205,7 @@ public class BaritoneUtil {
     /**
      * 检查是否能看到方块的指定面（射线检测）
      *
-     * @param pos 方块位置
+     * @param pos  方块位置
      * @param side 要检查的方块面方向
      * @return 如果能看到指定面则返回 true，否则返回 false
      */
@@ -232,11 +239,11 @@ public class BaritoneUtil {
     /**
      * 按指定朝向放置方块
      *
-     * @param pos 要放置方块的位置
+     * @param pos             要放置方块的位置
      * @param strictDirection 是否启用严格方向检查
-     * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
-     * @param faceDirection 方块的朝向
+     * @param clientSwing     是否在客户端显示挥手动画
+     * @param rotate          是否自动旋转视角
+     * @param faceDirection   方块的朝向
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeBlockByFaceDirection(BlockPos pos, boolean strictDirection, boolean clientSwing, boolean rotate, Direction faceDirection) {
@@ -252,11 +259,11 @@ public class BaritoneUtil {
     /**
      * 按指定朝向放置方块（详细版本）
      *
-     * @param initPos 初始位置
-     * @param pos 目标位置
-     * @param direction 放置方向
-     * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param initPos       初始位置
+     * @param pos           目标位置
+     * @param direction     放置方向
+     * @param clientSwing   是否在客户端显示挥手动画
+     * @param rotate        是否自动旋转视角
      * @param faceDirection 方块的朝向
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
@@ -308,10 +315,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置和方向放置方块
      *
-     * @param pos 方块位置
-     * @param direction 放置方向
+     * @param pos         方块位置
+     * @param direction   放置方向
      * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param rotate      是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeBlock(BlockPos pos, Direction direction, boolean clientSwing, boolean rotate) {
@@ -331,10 +338,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置向上放置方块（台阶等）
      *
-     * @param pos 方块位置
-     * @param direction 放置方向
+     * @param pos         方块位置
+     * @param direction   放置方向
      * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param rotate      是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeUpBlock(BlockPos pos, Direction direction, boolean clientSwing, boolean rotate) {
@@ -354,10 +361,10 @@ public class BaritoneUtil {
     /**
      * 在指定位置向下放置方块（台阶等）
      *
-     * @param pos 方块位置
-     * @param direction 放置方向
+     * @param pos         方块位置
+     * @param direction   放置方向
      * @param clientSwing 是否在客户端显示挥手动画
-     * @param rotate 是否自动旋转视角
+     * @param rotate      是否自动旋转视角
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
     public static boolean placeDownBlock(BlockPos pos, Direction direction, boolean clientSwing, boolean rotate) {
@@ -377,7 +384,7 @@ public class BaritoneUtil {
     /**
      * 使用方块命中结果放置方块
      *
-     * @param hitResult 方块命中结果
+     * @param hitResult   方块命中结果
      * @param clientSwing 是否在客户端显示挥手动画
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
@@ -388,7 +395,7 @@ public class BaritoneUtil {
     /**
      * 立即放置方块，处理潜行和挥手逻辑
      *
-     * @param result 方块命中结果
+     * @param result      方块命中结果
      * @param clientSwing 是否在客户端显示挥手动画
      * @return 如果成功放置方块则返回 true，否则返回 false
      */
@@ -429,7 +436,7 @@ public class BaritoneUtil {
     /**
      * 获取可以交互的方向
      *
-     * @param blockPos 方块位置
+     * @param blockPos        方块位置
      * @param strictDirection 是否启用严格方向检查
      * @return 可以交互的方向，如果没有则返回 null
      */
@@ -451,7 +458,7 @@ public class BaritoneUtil {
     /**
      * 获取可以交互的方向（排除上下方向）
      *
-     * @param blockPos 方块位置
+     * @param blockPos        方块位置
      * @param strictDirection 是否启用严格方向检查
      * @return 可以交互的方向（不包括上下），如果没有则返回 null
      */
@@ -477,9 +484,9 @@ public class BaritoneUtil {
     /**
      * 根据条件获取可以交互的方向
      *
-     * @param blockPos 方块位置
+     * @param blockPos        方块位置
      * @param strictDirection 是否启用严格方向检查
-     * @param direction_ 指定的方向条件
+     * @param direction_      指定的方向条件
      * @return 满足条件的交互方向，如果没有则返回 null
      */
     public static Direction getInteractDirectionIf(BlockPos blockPos, boolean strictDirection, Direction direction_) {
@@ -501,7 +508,7 @@ public class BaritoneUtil {
     /**
      * 获取台阶方块的交互方向（仅水平方向）
      *
-     * @param blockPos 方块位置
+     * @param blockPos        方块位置
      * @param strictDirection 是否启用严格方向检查
      * @return 可以交互的水平方向，如果没有则返回 null
      */
@@ -525,7 +532,7 @@ public class BaritoneUtil {
     /**
      * 获取 NCP（NoCheatPlus）兼容的放置方向集合
      *
-     * @param eyePos 眼部位置
+     * @param eyePos   眼部位置
      * @param blockPos 方块位置
      * @return 可用的放置方向集合
      */
@@ -536,9 +543,9 @@ public class BaritoneUtil {
     /**
      * 根据坐标差计算 NCP 兼容的放置方向集合
      *
-     * @param x 眼部 X 坐标
-     * @param y 眼部 Y 坐标
-     * @param z 眼部 Z 坐标
+     * @param x  眼部 X 坐标
+     * @param y  眼部 Y 坐标
+     * @param z  眼部 Z 坐标
      * @param dx 目标 X 坐标
      * @param dy 目标 Y 坐标
      * @param dz 目标 Z 坐标
@@ -684,17 +691,93 @@ public class BaritoneUtil {
         }
     }
 
+    public static Direction getPlaceDirection(BlockPos pos, boolean ignoreContainers) {
+        if (pos == null) {
+            return null;
+        }
+        Direction best = null;
+        if (mc.world != null && mc.player != null) {
+
+            double cDist = -1;
+            for (Direction dir : Direction.values()) {
+
+                // Doesn't place on top of max height
+                if (pos.offset(dir).getY() >= 319) {
+                    continue;
+                }
+
+                // Checks if block is an entity (chests, shulkers)
+                if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity()) {
+                    continue;
+                }
+
+                // Test if there is block in the side and if predicate is valid
+                Block b = mc.world.getBlockState(pos.offset(dir)).getBlock();
+                if (b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock) {
+                    continue;
+                }
+
+
+                // Only accepts if closer than previous accepted direction
+                double dist = PlayerUtils.distanceTo(pos.offset(dir));
+                if (dist >= 0 && (cDist < 0 || dist < cDist)) {
+                    best = dir;
+                    cDist = dist;
+                }
+            }
+        }
+        return best;
+    }
+
+    public static Direction getPlaceOnDirection(BlockPos pos) {
+        if (pos == null) {
+            return null;
+        }
+        Direction best = null;
+        if (mc.world != null && mc.player != null) {
+            double cDist = -1;
+            for (Direction dir : Direction.values()) {
+
+                // Doesn't place on top of max height
+                if (pos.offset(dir).getY() >= 319) {
+                    continue;
+                }
+
+                // Test if there is block in the side and if predicate is valid
+                Block b = mc.world.getBlockState(pos.offset(dir)).getBlock();
+                if ( !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock)) {
+                    continue;
+                }
+
+                // Only accepts if closer than last accepted direction
+                double dist = mc.player.getEyePos().distanceTo(pos.offset(dir).toCenterPos());
+                if (dist >= 0 && (cDist < 0 || dist < cDist)) {
+                    best = dir;
+                    cDist = dist;
+                }
+            }
+        }
+        return best;
+    }
     /**
      * 挥手方式枚举
      */
     public enum SwingSide {
-        /** 全部（客户端和服务器） */
+        /**
+         * 全部（客户端和服务器）
+         */
         All,
-        /** 仅客户端 */
+        /**
+         * 仅客户端
+         */
         Client,
-        /** 仅服务器 */
+        /**
+         * 仅服务器
+         */
         Server,
-        /** 无挥手 */
+        /**
+         * 无挥手
+         */
         None;
     }
 

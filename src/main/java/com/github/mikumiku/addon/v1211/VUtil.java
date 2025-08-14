@@ -1,9 +1,13 @@
 package com.github.mikumiku.addon.v1211;
 
+import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -14,6 +18,8 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.Optional;
 
@@ -54,5 +60,12 @@ public class VUtil {
         Direction dir = Direction.fromRotation(Rotations.getYaw(blockPos)).getOpposite();
 
         return dir;
+    }
+    public static double getToughness(LivingEntity entity) {
+        double value = entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
+        return value;
+    }
+    public static void setRaycast(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
+        raycastContext.set(source, vec3d, shapeType, fluidHandling, player);
     }
 }

@@ -292,11 +292,9 @@ public class AutoCrystalBlock extends BaseModule {
         // 切换到对应物品
         BagUtil.doSwap(blockResult.slot());
 
-        // 使用BlockUtilGrim放置方块
         boolean success = BaritoneUtil.placeBlock(pos, true, true, true);
 
         BagUtil.doSwap(blockResult.slot());
-
 
         return success;
     }
