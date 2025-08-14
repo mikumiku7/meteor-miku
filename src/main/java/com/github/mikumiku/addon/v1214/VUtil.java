@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.v1214;
 
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -10,6 +11,8 @@ import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 import java.util.Optional;
 
@@ -42,5 +45,12 @@ public class VUtil {
     public static boolean isFallFlying(MinecraftClient mc) {
         return mc.player.isGliding();
     }
+    public static Direction getOppositeDirectionTo(BlockPos blockPos) {
+        Direction dir = Direction.fromHorizontalDegrees(Rotations.getYaw(blockPos)).getOpposite();
+
+        return dir;
+    }
+
+
 
 }

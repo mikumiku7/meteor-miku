@@ -3,6 +3,7 @@ package com.github.mikumiku.addon.util;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -31,6 +32,25 @@ public class WorldUtils {
         return blocks;
     }
 
+    public static List<BlockPos> getSphere(double range) {
+        Vec3d pos = MinecraftClient.getInstance().player.getEyePos();
+
+        List<BlockPos> list = new ArrayList<>();
+
+        for (double x = pos.getX() - range; x < pos.getX() + range; x++) {
+            for (double z = pos.getZ() - range; z < pos.getZ() + range; z++) {
+                for (double y = pos.getY() - range; y < pos.getY() + range; y++) {
+                    BlockPos blockPos = new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z));
+
+                    if (!(blockPos.toCenterPos().distanceTo(pos) > range) && !list.contains(blockPos)) {
+                        list.add(blockPos);
+                    }
+                }
+            }
+        }
+
+        return list;
+    }
     public static double distanceBetween(BlockPos pos1, BlockPos pos2) {
         double d = pos1.getX() - pos2.getX();
         double e = pos1.getY() - pos2.getY();

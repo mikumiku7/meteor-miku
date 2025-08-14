@@ -18,6 +18,28 @@
 
 1013297171
 
+
+## 🛠️ 安装
+
+1.  前往本项目的 **[Releases](https://github.com/mikumiku7/meteor-miku/releases)** 页面。
+2.  下载对应的最新版本的 `.jar` 文件。
+3.  将下载的 `.jar` 文件放入您 Minecraft 游戏目录下的 `mods` 文件夹。
+4.  确保您已经安装了 Meteor Client 和 https://github.com/xingke0/meteor_chinese
+5.  启动游戏。
+
+## 🚀 使用方法
+
+1.  启动游戏后，在游戏中按下 `右 Shift` 键打开 Meteor Client 的 GUI 界面。
+2.  在最上面的modules右边的config配置font中, 选择中文字体,如 等线（dengxian）.
+3.  在模块分类中找到本插件的分类.
+4.  点击您想要使用的模块，即可在右侧进行详细设置。
+
+## 注意
+
+目前，本插件的所有模块界面和描述 **仅支持中文**。
+
+如果没显示文字, 请安装 [xingke0/meteor_chinese: 为 meteor客户端 提供中文支持](https://github.com/xingke0/meteor_chinese)
+
 ## ✨ 功能模块介绍
 
 不断添加新的模块中，你可以提出新功能的建议。目前的功能如下：
@@ -153,26 +175,6 @@
 
 ---
 
-## 🛠️ 安装
-
-1.  前往本项目的 **[Releases](https://github.com/mikumiku7/meteor-miku/releases)** 页面。 
-2.  下载最新版本的 `.jar` 文件。
-3.  将下载的 `.jar` 文件放入您 Minecraft 游戏目录下的 `mods` 文件夹。
-4.  确保您已经安装了 Meteor Client 和 https://github.com/xingke0/meteor_chinese。
-5.  启动游戏。
-
-## 🚀 使用方法
-
-1.  启动游戏后，在游戏中按下 `右 Shift` 键打开 Meteor Client 的 GUI 界面。
-2.  在最上面的modules右边的config配置font中, 选择中文字体,如 等线（dengxian）.
-3.  在模块分类中找到本插件的分类.
-4.  点击您想要使用的模块，即可在右侧进行详细设置。
-
-## 🌐 语言支持
-
-目前，本插件的所有模块界面和描述 **仅支持中文**。
-
-如果没显示文字, 请安装 [xingke0/meteor_chinese: 为 meteor客户端 提供中文支持](https://github.com/xingke0/meteor_chinese)
 
 ## 🤝 如何贡献 (Contributing)
 

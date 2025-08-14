@@ -154,6 +154,7 @@ public class PlayerAlert extends BaseModule {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         knownPlayers.clear();
         playersInRenderDistance.clear();
         playersInCloseRange.clear();
