@@ -24,6 +24,16 @@ Advanced ore ESP using world seed calculations. Precisely shows ore locations ev
 - Baritone integration for automated mining
 - Biome-specific ore rendering
 
+### **AutoCraft**
+Automatically search GitHub repositories containing specific keywords in files with star count above specified threshold.
+- Smart search based on keywords, star count, programming language filters
+- Automated periodic searches with configurable intervals
+- Flexible configuration for search terms, minimum stars, and language filtering
+- Result management with maximum result limits, detailed information display, and clipboard copying
+- Fork repository filtering options
+- Real-time search status and repository count display
+- Network optimized using GitHub API with error handling and retry support
+
 ## Installation
 
 1. Download the latest `.jar` from [Releases](https://github.com/mikumiku7/meteor-miku/releases)
