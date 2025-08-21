@@ -218,7 +218,7 @@ public class AutoCraft extends BaseModule {
             String itemsSection = jsonResponse.substring(jsonResponse.indexOf("\"items\":[") + 9);
             itemsSection = itemsSection.substring(0, itemsSection.lastIndexOf("]"));
 
-            String[] repositories = itemsSection.split("\\},\\{");
+            String[] repositories = itemsSection.split("\\},\\s*\\{");
             
             StringBuilder resultBuilder = new StringBuilder();
             resultBuilder.append("=== AutoCraft 搜索结果 ===\n");
@@ -277,7 +277,15 @@ public class AutoCraft extends BaseModule {
             int start = json.indexOf(key);
             if (start == -1) return null;
             
-            start = json.indexOf("\"", start + key.length()) + 1;
+            // Check if the value is null
+            int nullStart = json.indexOf("null", start + key.length());
+            int quoteStart = json.indexOf("\"", start + key.length());
+            
+            if (nullStart != -1 && (quoteStart == -1 || nullStart < quoteStart)) {
+                return null;
+            }
+            
+            start = quoteStart + 1;
             int end = json.indexOf("\"", start);
             
             return json.substring(start, end);
