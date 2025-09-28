@@ -110,8 +110,8 @@ public class RotationManager {
                         mc.player.getX(),
                         mc.player.getY(),
                         mc.player.getZ(),
-                        mc.player.getYaw(),
-                        mc.player.getPitch(),
+                        rotation.getYaw(),
+                        rotation.getPitch(),
                         mc.player.isOnGround()
                     )
                 );

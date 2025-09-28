@@ -9,6 +9,7 @@
     "HeightRangePlacementModifierAccessor",
     "IClientWorld",
     "MikuMixin",
+    "MineProcessMixin",
     "RarityFilterPlacementModifierAccessor"
   ],
   "injectors": {

@@ -190,7 +190,7 @@ tasks.register("prepareVersionSpecificSources") {
         val sourceDir = when (currentMcVersion) {
             "1.21.1" -> file("src/main/java/com/github/mikumiku/addon/v1211")
             "1.21.4" -> file("src/main/java/com/github/mikumiku/addon/v1214")
-            else -> throw GradleException("不支持的版本: $currentMcVersion")
+            else -> throw GradleException("Unsupported version: $currentMcVersion")
         }
 
         if (sourceDir.exists() && sourceDir.isDirectory) {
@@ -210,11 +210,11 @@ tasks.register("prepareVersionSpecificSources") {
                         .replace("package com.github.mikumiku.addon.v1214;", "package com.github.mikumiku.addon.util;")
 
                     targetFile.writeText(content)
-                    println("已复制并处理版本特定文件: ${sourceFile.name} -> ${targetFile.absolutePath}")
+                    println("Version-specific files have been copied and processed: ${sourceFile.name} -> ${targetFile.absolutePath}")
                 }
             }
         } else {
-            throw GradleException("版本特定源目录不存在: ${sourceDir.absolutePath}")
+            throw GradleException("The version-specific source directory does not exist: ${sourceDir.absolutePath}")
         }
     }
 }

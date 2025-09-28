@@ -35,16 +35,16 @@ import java.util.*;
 
 public class Ore {
 
-    private static final Setting<Boolean> coal = new BoolSetting.Builder().name("煤炭").build();
-    private static final Setting<Boolean> iron = new BoolSetting.Builder().name("铁").build();
-    private static final Setting<Boolean> gold = new BoolSetting.Builder().name("金").build();
-    private static final Setting<Boolean> redstone = new BoolSetting.Builder().name("红石").build();
-    private static final Setting<Boolean> diamond = new BoolSetting.Builder().name("钻石").build();
-    private static final Setting<Boolean> lapis = new BoolSetting.Builder().name("青金石").build();
-    private static final Setting<Boolean> copper = new BoolSetting.Builder().name("铜").build();
-    private static final Setting<Boolean> emerald = new BoolSetting.Builder().name("绿宝石").build();
-    private static final Setting<Boolean> quartz = new BoolSetting.Builder().name("石英").build();
-    private static final Setting<Boolean> debris = new BoolSetting.Builder().name("远古残骸").build();
+    private static final Setting<Boolean> coal = new BoolSetting.Builder().name("煤炭").description("coal_ore").build();
+    private static final Setting<Boolean> iron = new BoolSetting.Builder().name("铁").description("iron_ore").build();
+    private static final Setting<Boolean> gold = new BoolSetting.Builder().name("金").description("gold_ore").build();
+    private static final Setting<Boolean> redstone = new BoolSetting.Builder().name("红石").description("redstone_ore").build();
+    private static final Setting<Boolean> diamond = new BoolSetting.Builder().name("钻石").description("diamond_ore").build();
+    private static final Setting<Boolean> lapis = new BoolSetting.Builder().name("青金石").description("lapis_ore").build();
+    private static final Setting<Boolean> copper = new BoolSetting.Builder().name("铜").description("copper_ore").build();
+    private static final Setting<Boolean> emerald = new BoolSetting.Builder().name("绿宝石").description("emerald_ore").build();
+    private static final Setting<Boolean> quartz = new BoolSetting.Builder().name("石英").description("nether_quartz_ore").build();
+    private static final Setting<Boolean> debris = new BoolSetting.Builder().name("远古残骸").description("ancient_debris").build();
     public static final List<Setting<Boolean>> oreSettings = new ArrayList<>(Arrays.asList(coal, iron, gold, redstone, diamond, lapis, copper, emerald, quartz, debris));
 
     public static Map<RegistryKey<Biome>, List<Ore>> getRegistry(Dimension dimension) {

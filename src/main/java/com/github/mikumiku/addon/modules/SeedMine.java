@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import baritone.api.BaritoneAPI;
+import baritone.api.utils.BetterBlockPos;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import com.github.mikumiku.addon.util.Ore;
 import com.github.mikumiku.addon.util.seeds.Seed;
@@ -38,6 +39,7 @@ public class SeedMine extends Module {
     private Seed worldSeed = null;
     private Map<RegistryKey<Biome>, List<Ore>> oreConfig;
     public List<BlockPos> oreGoals = new ArrayList<>();
+    private int tickCounter = 0;
 
     private final SettingGroup sgSeed = settings.createGroup("种子设置");
     private final Setting<String> seedInput = sgSeed.add(new StringSetting.Builder()
@@ -74,16 +76,46 @@ public class SeedMine extends Module {
         .build()
     );
 
+
     private final Setting<Boolean> baritone = sgGeneral.add(new BoolSetting.Builder()
-        .name("同步设置baritone")
+        .name("同步设置baritone" + (BaritoneUtils.IS_AVAILABLE ? "（OK）" : "（没找到）"))
         .description("将baritone矿物位置设置为种子算出的实际位置。")
         .defaultValue(false)
         .build()
     );
 
+    private final Setting<Boolean> directMine = sgGeneral.add(new BoolSetting.Builder()
+        .name("直接开挖")
+        .description("不建议使用，除非实在不会命令")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> low = sgGeneral.add(new BoolSetting.Builder()
+        .name("仅挖残骸密集区")
+        .description("远古残骸在 Y=8~24 层最集中，挖掘效率最高，我们就挖这些。")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> diamond = sgGeneral.add(new BoolSetting.Builder()
+        .name("仅挖钻石密集区")
+        .description("钻石残骸在 Y=-58~-10 层最集中，挖掘效率最高，我们就挖这些。")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Integer> updateInterval = sgGeneral.add(new IntSetting.Builder()
+        .name("更新间隔")
+        .description("设置目标的间隔时间（秒）")
+        .defaultValue(1)
+        .min(1)
+        .max(10)
+        .sliderMax(10)
+        .build()
+    );
+
 
     public SeedMine() {
-        super(MikuMikuAddon.CATEGORY, "种子矿透", "种子透视增强版。输入种子， 推算矿物实际位置。基于meteor_rejects");
+        super(MikuMikuAddon.CATEGORY, "种子矿透", "种子透视增强版。输入种子，算出矿物实际位置。注意必须使用基于彗星版的男中音。基于meteor_rejects");
         SettingGroup sgOres = settings.createGroup("矿物");
         Ore.oreSettings.forEach(sgOres::add);
     }
@@ -147,19 +179,44 @@ public class SeedMine extends Module {
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null || oreConfig == null) return;
 
-        if (baritone() && BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess().isActive()) {
-            oreGoals.clear();
-            var chunkPos = mc.player.getChunkPos();
-            int rangeVal = 4;
-            for (int range = 0; range <= rangeVal; ++range) {
-                for (int x = -range + chunkPos.x; x <= range + chunkPos.x; ++x) {
-                    oreGoals.addAll(addToBaritone(x, chunkPos.z + range - rangeVal));
-                }
-                for (int x = -range + 1 + chunkPos.x; x < range + chunkPos.x; ++x) {
-                    oreGoals.addAll(this.addToBaritone(x, chunkPos.z - range + rangeVal + 1));
-                }
+        // 直接开挖功能
+        if (directMine.get() && BaritoneUtils.IS_AVAILABLE) {
+            tickCounter++;
+            int intervalTicks = updateInterval.get() * 20; // 转换为tick数
+
+            if (tickCounter >= intervalTicks) {
+                tickCounter = 0;
+                setNearestMiningTarget();
             }
         }
+
+        List<BlockPos> tempGoals = new ArrayList<>();
+        int rangeVal = 4;
+        var chunkPos = mc.player.getChunkPos();
+
+        for (int range = 0; range <= rangeVal; ++range) {
+            for (int x = -range + chunkPos.x; x <= range + chunkPos.x; ++x) {
+                tempGoals.addAll(addToBaritone(x, chunkPos.z + range - rangeVal));
+            }
+            for (int x = -range + 1 + chunkPos.x; x < range + chunkPos.x; ++x) {
+                tempGoals.addAll(addToBaritone(x, chunkPos.z - range + rangeVal + 1));
+            }
+        }
+
+        if (low.get()) {
+            tempGoals.removeIf(p -> p.getY() < 7 || p.getY() > 30);
+        }
+
+        if (diamond.get()) {
+            tempGoals.removeIf(p -> p.getY() < -58 || p.getY() > -10);
+        }
+
+        // 曼哈顿距离排序
+        tempGoals.sort(Comparator.comparingInt(p ->
+            Math.abs(p.getX() - mc.player.getBlockX()) + Math.abs(p.getZ() - mc.player.getBlockZ())
+        ));
+
+        oreGoals.addAll(tempGoals);
     }
 
     private ArrayList<BlockPos> addToBaritone(int chunkX, int chunkZ) {
@@ -173,6 +230,58 @@ public class SeedMine extends Module {
                 .forEach(baritoneGoals::add);
         }
         return baritoneGoals;
+    }
+
+    private void setNearestMiningTarget() {
+        if (mc.player == null || !BaritoneUtils.IS_AVAILABLE) return;
+
+        // 收集所有可用的矿石目标
+        List<BlockPos> allTargets = new ArrayList<>();
+        int rangeVal = 8; // 扩大搜索范围
+        var chunkPos = mc.player.getChunkPos();
+
+        for (int range = 0; range <= rangeVal; ++range) {
+            for (int x = -range + chunkPos.x; x <= range + chunkPos.x; ++x) {
+                allTargets.addAll(addToBaritone(x, chunkPos.z + range - rangeVal));
+            }
+            for (int x = -range + 1 + chunkPos.x; x < range + chunkPos.x; ++x) {
+                allTargets.addAll(addToBaritone(x, chunkPos.z - range + rangeVal + 1));
+            }
+        }
+
+        if (allTargets.isEmpty()) return;
+
+        // 按曼哈顿距离排序
+        allTargets.sort(Comparator.comparingInt(p ->
+            Math.abs(p.getX() - mc.player.getBlockX()) +
+                Math.abs(p.getY() - mc.player.getBlockY()) +
+                Math.abs(p.getZ() - mc.player.getBlockZ())
+        ));
+
+        // 获取最近的目标
+        BlockPos nearestTarget = allTargets.get(0);
+
+        BetterBlockPos betterBlockPos = BetterBlockPos.from(nearestTarget);
+
+        List<String> ores = Ore.oreSettings.stream()
+            .filter(setting -> setting.get())
+            .map(setting -> setting.description)
+            .map(setting -> setting.toLowerCase())
+            .toList();
+
+        // 设置Baritone挖掘目标
+        try {
+            if (!BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess().isActive()) {
+                info("设置挖掘目标: " + nearestTarget.getX() + ", " + nearestTarget.getY() + ", " + nearestTarget.getZ());
+
+                BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess().mineByName(ores.toArray(new String[]{}));
+            }
+        } catch (Exception e) {
+            info("设置挖掘目标失败" + e);
+        }
+
+//        BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(betterBlockPos);
+
     }
 
 
@@ -236,7 +345,7 @@ public class SeedMine extends Module {
         if (seed == null) return;
         worldSeed = seed;
         oreConfig = Ore.getRegistry(PlayerUtils.getDimension());
-
+        oreGoals.clear();
         chunkRenderers.clear();
         if (mc.world != null && worldSeed != null) {
             loadVisibleChunks();

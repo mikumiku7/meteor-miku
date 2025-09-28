@@ -62,6 +62,13 @@ public class HandsomeSpin extends BaseModule {
         .build());
 
     // 是否启用炫酷特效
+    private final Setting<Boolean> hand = sgGeneral.add(new BoolSetting.Builder()
+        .name("挥手")
+        .description("启用挥手")
+        .defaultValue(true)
+        .build());
+    
+    // 是否启用炫酷特效
     private final Setting<Boolean> coolEffects = sgGeneral.add(new BoolSetting.Builder()
         .name("炫酷特效")
         .description("启用额外的炫酷提示信息")
