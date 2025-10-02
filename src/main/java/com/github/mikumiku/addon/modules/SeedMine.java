@@ -2,7 +2,7 @@ package com.github.mikumiku.addon.modules;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.BetterBlockPos;
-import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.util.Ore;
 import com.github.mikumiku.addon.util.seeds.Seed;
 import com.github.mikumiku.addon.util.seeds.Seeds;
@@ -15,7 +15,6 @@ import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.pathing.NopPathManager;
 import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -33,7 +32,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class SeedMine extends Module {
+public class SeedMine extends BaseModule {
 
     private final Map<Long, Map<Ore, Set<Vec3d>>> chunkRenderers = new ConcurrentHashMap<>();
     private Seed worldSeed = null;
@@ -115,7 +114,7 @@ public class SeedMine extends Module {
 
 
     public SeedMine() {
-        super(MikuMikuAddon.CATEGORY, "种子矿透", "种子透视增强版。输入种子，算出矿物实际位置。注意必须使用基于彗星版的男中音。基于meteor_rejects");
+        super("种子矿透", "种子透视增强版。输入种子，算出矿物实际位置。注意必须使用基于彗星版的男中音。基于meteor_rejects");
         SettingGroup sgOres = settings.createGroup("矿物");
         Ore.oreSettings.forEach(sgOres::add);
     }
@@ -301,6 +300,7 @@ public class SeedMine extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         if (Seeds.get().getSeed() == null) {
             error("未找到种子。请在种子设置中输入种子并点击应用");
             this.toggle();

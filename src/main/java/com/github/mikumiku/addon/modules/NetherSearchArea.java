@@ -18,8 +18,8 @@ import java.util.List;
 
 public class NetherSearchArea extends BaseModule {
     public enum SearchPattern {
-        Spiral,
-        Rectangle
+        Rectangle,
+        Spiral
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -34,9 +34,9 @@ public class NetherSearchArea extends BaseModule {
     private final Setting<Integer> searchRadius = sgGeneral.add(new IntSetting.Builder()
         .name("搜索半径")
         .description("搜索区域的半径，以区块为单位。")
-        .defaultValue(5)
+        .defaultValue(10)
         .min(1)
-        .max(20)
+        .max(2000)
         .build()
     );
 
@@ -65,9 +65,19 @@ public class NetherSearchArea extends BaseModule {
         .build()
     );
 
+    private final Setting<Integer> targetProximity = sgGeneral.add(new IntSetting.Builder()
+        .name("目标接近距离")
+        .description("认为到达目标点的距离阈值（方块）。")
+        .defaultValue(64)
+        .min(2)
+        .max(500)
+        .build()
+    );
+
     private List<BlockPos> searchPoints;
     private int currentPointIndex;
     private BlockPos startPos;
+    private BlockPos currentTarget;
     private int tickCounter;
     private boolean isSearching;
     private boolean wasInNether;
@@ -226,28 +236,44 @@ public class NetherSearchArea extends BaseModule {
     }
 
     private void generateRectanglePoints(BlockPos center, int radius, int distance) {
-        // 从中心往外一层层搜索
-        for (int layer = 0; layer <= radius; layer++) {
-            if (layer == 0) {
-                // 中心点
-                BlockPos point = new BlockPos(center.getX(), center.getY(), center.getZ());
-                searchPoints.add(point);
-            } else {
-                // 当前层的边界点
-                for (int x = -layer; x <= layer; x++) {
-                    for (int z = -layer; z <= layer; z++) {
-                        // 只添加当前层的边界点（不包括内层已经添加过的点）
-                        if (Math.abs(x) == layer || Math.abs(z) == layer) {
-                            BlockPos point = new BlockPos(center.getX() + x * distance, center.getY(), center.getZ() + z * distance);
-                            searchPoints.add(point);
-                        }
-                    }
-                }
+        // 中心点
+        BlockPos point = new BlockPos(center.getX(), center.getY(), center.getZ());
+        searchPoints.add(point);
+
+        // 螺旋向外搜索矩形边界
+        for (int layer = 1; layer <= radius; layer++) {
+            // 上边：从左到右
+            for (int x = -layer; x <= layer; x++) {
+                BlockPos p = new BlockPos(center.getX() + x * distance, center.getY(), center.getZ() + (-layer) * distance);
+                searchPoints.add(p);
+            }
+
+            // 右边：从上到下（跳过右上角，因为已经添加过）
+            for (int z = -layer + 1; z <= layer; z++) {
+                BlockPos p = new BlockPos(center.getX() + layer * distance, center.getY(), center.getZ() + z * distance);
+                searchPoints.add(p);
+            }
+
+            // 下边：从右到左（跳过右下角，因为已经添加过）
+            for (int x = layer - 1; x >= -layer; x--) {
+                BlockPos p = new BlockPos(center.getX() + x * distance, center.getY(), center.getZ() + layer * distance);
+                searchPoints.add(p);
+            }
+
+            // 左边：从下到上（跳过左下角和左上角，因为已经添加过）
+            for (int z = layer - 1; z >= -layer + 1; z--) {
+                BlockPos p = new BlockPos(center.getX() + (-layer) * distance, center.getY(), center.getZ() + z * distance);
+                searchPoints.add(p);
             }
         }
     }
 
     private void goToPosition(BlockPos pos) {
+        if (currentTarget != null && currentTarget.getX() == pos.getX() && currentTarget.getZ() == pos.getZ()) {
+            return; // Same target, no need to path again
+        }
+
+        currentTarget = pos;
         try {
             BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().pathTo(new GoalXZ(pos.getX(), pos.getZ()));
         } catch (Exception e) {
@@ -264,7 +290,7 @@ public class NetherSearchArea extends BaseModule {
                 Math.pow(playerPos.z - target.getZ(), 2)
         );
 
-        return distance < 128.0; // Consider close enough if within 100 blocks
+        return distance < targetProximity.get();
     }
 
     private boolean isInNether() {
@@ -277,6 +303,7 @@ public class NetherSearchArea extends BaseModule {
         searchPoints = null;
         currentPointIndex = 0;
         startPos = null;
+        currentTarget = null;
         tickCounter = 0;
         isSearching = false;
         wasInNether = false;

@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.modules;
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import com.github.mikumiku.addon.gui.EnchantmentSelectScreen;
 import com.github.mikumiku.addon.util.VUtil;
@@ -84,7 +85,7 @@ import java.util.*;
  * <p>
  * "repo": "https://github.com/maxsupermanhd/meteor-villager-roller"
  */
-public class VillagerRoller extends Module {
+public class VillagerRoller extends BaseModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSound = settings.createGroup("声音");
     private final SettingGroup sgChatFeedback = settings.createGroup("聊天反馈", false);
@@ -311,6 +312,7 @@ public class VillagerRoller extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         if (toggleOnBindRelease) {
             toggleOnBindRelease = false;
             if (cfSetup.get()) {

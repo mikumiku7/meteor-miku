@@ -102,7 +102,7 @@ public class ShulkerBoxItemFetcher extends BaseModule {
     private boolean hasRotated = false; // Track if we've rotated to look at the shulker box
 
     public ShulkerBoxItemFetcher() {
-        super("盒中取物", "自动从潜影盒中获取指定物品。自动放盒，取物，打盒，捡盒");
+        super("一键补给", "自动从潜影盒中获取指定物品。自动放盒，取物，打盒，捡盒");
         baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
     }
 
@@ -343,8 +343,8 @@ public class ShulkerBoxItemFetcher extends BaseModule {
 
     private boolean isValidPlacePosition(BlockPos pos) {
         return mc.world.getBlockState(pos).isAir() &&
-               BlockUtils.canPlace(pos) &&
-               !mc.world.getBlockState(pos.down()).isAir();
+            BlockUtils.canPlace(pos) &&
+            !mc.world.getBlockState(pos.down()).isAir();
     }
 
     private void moveItemToHotbar(int sourceSlot) {

@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.modules;
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import com.github.mikumiku.addon.util.WaypointUtils;
 import com.github.mikumiku.addon.util.seeds.Seed;
@@ -27,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import static meteordevelopment.meteorclient.utils.world.Dimension.Overworld;
 
 @Slf4j
-public class StructureFinder extends Module {
+public class StructureFinder extends BaseModule {
 
     // 设置组
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -227,6 +228,7 @@ public class StructureFinder extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         if (autoSearch.get()) {
             startStructureSearch();
         }
