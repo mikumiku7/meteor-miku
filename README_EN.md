@@ -41,6 +41,29 @@ Advanced ore ESP using world seed calculations. Precisely shows ore locations ev
 
 This addon currently **only supports Chinese**. For proper text display, install [meteor_chinese](https://github.com/xingke0/meteor_chinese).
 
+
+## Credits
+
+https://anticope.pages.dev/addons/
+
+https://github.com/etianl/Trouser-Streak/releases
+
+https://github.com/miles352/meteor-stashhunting-addon/releases
+
+https://github.com/AntiCope/meteor-rejects
+
+https://github.com/xingke0/meteor_chinese
+
+https://github.com/JFronny/MeteorAdditions
+
+https://github.com/RedCarlos26/HIGTools
+
+https://github.com/maxsupermanhd/meteor-villager-roller
+
+https://github.com/KassuK1/BlackOut
+
+https://github.com/iM4dCat/Alien
+
 ## License
 
 This project is licensed under [GPL3](LICENSE).
