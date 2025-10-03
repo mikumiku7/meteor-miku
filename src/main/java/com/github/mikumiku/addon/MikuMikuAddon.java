@@ -43,16 +43,20 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new AutoCrystalBlock());
         modules.add(new AutoLog());
         modules.add(new InfiniteElytra());
-        modules.add(new RoadBuilder());
         modules.add(new GhostMine());
         modules.add(new AutoWither());
         modules.add(new AnchorAuraPlus());
         modules.add(new AutoEz());
+        modules.add(new RoadBuilder());
 //        modules.add(new KillAuraPlus());
         modules.add(new SelfTrapPlusPlus());
         modules.add(new AutoSM());
         modules.add(new AutoLoginPlus());
         modules.add(new NetherSearchArea());
+        modules.add(new NoFall());
+        modules.add(new EntityList());
+        modules.add(new AutoTouchFire());
+        modules.add(new FarmHelper());
 //        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
 //        MikuModule mikuModule = new MikuModule(CATEGORY, "miku插件", "miku");
         ChatUtils.warning("Miku插件完全开源免费。如果你在别处付费了，那么就当获取信息的费用了。后续更新免费获取地址: https://github.com/mikumiku7/meteor-miku/releases");
@@ -63,10 +67,12 @@ public class MikuMikuAddon extends MeteorAddon {
         // HUD
         Hud.get().register(HudMiku.INFO);
         AutoSM autoSM = modules.get(AutoSM.class);
-        if (!autoSM.isActive()) {
-            autoSM.toggle();
-        }
+        //todo kill aura
+        //todo fly
 
+//        if (!autoSM.isActive()) {
+//            autoSM.toggle();
+//        }
     }
 
     @Override

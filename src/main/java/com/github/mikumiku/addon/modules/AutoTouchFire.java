@@ -24,7 +24,7 @@ import net.minecraft.util.math.Direction;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AutoExtinguish extends BaseModule {
+public class AutoTouchFire extends BaseModule {
     private final SettingGroup sgGeneral = settings.createGroup("扑灭你周围的火");
     private final SettingGroup sgBucket = settings.createGroup("扑灭你身上的火");
 
@@ -84,7 +84,7 @@ public class AutoExtinguish extends BaseModule {
 
     private static final StatusEffect FIRE_RESISTANCE = Registries.STATUS_EFFECT.get(Identifier.of("fire_resistance"));
 
-    public AutoExtinguish() {
+    public AutoTouchFire() {
         super("自动消防", "自动扑灭你周围的火");
     }
 
