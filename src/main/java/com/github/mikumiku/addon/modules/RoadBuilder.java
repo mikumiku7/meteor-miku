@@ -29,22 +29,19 @@ public class RoadBuilder extends BaseModule {
     SettingGroup sgGeneral = settings.getDefaultGroup();
     SettingGroup renderGeneral = settings.createGroup("渲染");
 
-    Setting<Double> range = sgGeneral
-            .add(
-                    new DoubleSetting.Builder()
-                            .name("建造范围")
-                            .description("自动建造的最大范围")
-                            .defaultValue(4)
-                            .range(0, 6)
-                            .build()
-            );
-    Setting<Block> blockType = sgGeneral
-            .add(new BlockSetting.Builder()
-                    .name("方块")
-                    .description("选择用于建造的方块")
-                    .defaultValue(Blocks.COBBLESTONE)
-                    .build()
-            );
+    Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
+            .name("建造范围")
+            .description("自动建造的最大范围")
+            .defaultValue(4)
+            .range(0, 6)
+            .build()
+    );
+    Setting<Block> blockType = sgGeneral.add(new BlockSetting.Builder()
+            .name("方块")
+            .description("选择用于建造的方块")
+            .defaultValue(Blocks.COBBLESTONE)
+            .build()
+    );
 
     Setting<SlapType> slapType = sgGeneral.add(new EnumSetting.Builder<SlapType>()
             .name("半砖方向(如果有)")
@@ -54,56 +51,45 @@ public class RoadBuilder extends BaseModule {
             .build()
     );
 
-    Setting<Integer> blocksPer = sgGeneral
-            .add(
-                    new IntSetting.Builder()
-                            .name("每次放置数量")
-                            .description("每个游戏刻放置的方块数量")
-                            .defaultValue(2)
-                            .sliderRange(1, 6)
-                            .build()
-            );
-    Setting<Integer> delay = sgGeneral
-            .add(
-                    new IntSetting.Builder()
-                            .name("放置延迟")
-                            .description("放置方块之间的延迟时间（单位：tick）")
-                            .defaultValue(0)
-                            .sliderRange(0, 20)
-                            .build()
-            );
-    Setting<Boolean> render = renderGeneral
-            .add(
-                    new BoolSetting.Builder()
-                            .name("显示渲染")
-                            .description("是否显示待放置方块的渲染预览")
-                            .defaultValue(true)
-                            .build()
-            );
-    Setting<ShapeMode> shapeMode = renderGeneral
-            .add(
-                    ((EnumSetting.Builder) ((EnumSetting.Builder) ((EnumSetting.Builder) new EnumSetting.Builder()
-                            .name("渲染模式"))
-                            .description("选择渲染的显示模式"))
-                            .defaultValue(ShapeMode.Both))
-                            .build()
-            );
-    Setting<SettingColor> readySideColor = renderGeneral
-            .add(
-                    new ColorSetting.Builder()
-                            .name("侧面颜色")
-                            .description("待放置方块渲染的侧面填充颜色")
-                            .defaultValue(new SettingColor(135, 206, 235, 30))//天空蓝色
-                            .build()
-            );
-    Setting<SettingColor> readyLineColor = renderGeneral
-            .add(
-                    new ColorSetting.Builder()
-                            .name("线条颜色")
-                            .description("待放置方块渲染的边框线条颜色")
-                            .defaultValue(new SettingColor(100, 149, 237, 80)) //矢车菊蓝色
-                            .build()
-            );
+    Setting<Integer> blocksPer = sgGeneral.add(new IntSetting.Builder()
+            .name("每次放置数量")
+            .description("每个游戏刻放置的方块数量")
+            .defaultValue(2)
+            .sliderRange(1, 6)
+            .build()
+    );
+    Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+            .name("放置延迟")
+            .description("放置方块之间的延迟时间（单位：tick）")
+            .defaultValue(0)
+            .sliderRange(0, 20)
+            .build()
+    );
+    Setting<Boolean> render = renderGeneral.add(new BoolSetting.Builder()
+            .name("显示渲染")
+            .description("是否显示待放置方块的渲染预览")
+            .defaultValue(true)
+            .build()
+    );
+    Setting<ShapeMode> shapeMode = renderGeneral.add(new EnumSetting.Builder<ShapeMode>()
+            .name("渲染模式")
+            .description("选择渲染的显示模式")
+            .defaultValue(ShapeMode.Both)
+            .build()
+    );
+    Setting<SettingColor> readySideColor = renderGeneral.add(new ColorSetting.Builder()
+            .name("侧面颜色")
+            .description("待放置方块渲染的侧面填充颜色")
+            .defaultValue(new SettingColor(135, 206, 235, 30))//天空蓝色
+            .build()
+    );
+    Setting<SettingColor> readyLineColor = renderGeneral.add(new ColorSetting.Builder()
+            .name("线条颜色")
+            .description("待放置方块渲染的边框线条颜色")
+            .defaultValue(new SettingColor(100, 149, 237, 80)) //矢车菊蓝色
+            .build()
+    );
+
     List<BlockPos> placeList = new ArrayList<>();
     int tickCounter = 0;
     int tickBlockCount = 0;
@@ -118,7 +104,6 @@ public class RoadBuilder extends BaseModule {
     @Override
     public void onActivate() {
         super.onActivate();
-
     }
 
     @EventHandler
@@ -215,7 +200,7 @@ public class RoadBuilder extends BaseModule {
                 BaritoneUtil.placeDownBlock(pos, true, true, true);
             }
         } else {
-            BaritoneUtil.placeBlock(pos, true, true, true);
+            BaritoneUtil.placeBlock(pos);
         }
 
         BagUtil.doSwap(itemResult);

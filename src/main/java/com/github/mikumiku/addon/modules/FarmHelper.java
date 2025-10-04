@@ -4,9 +4,12 @@ import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.util.BagUtil;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import com.github.mikumiku.addon.util.WorldUtils;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.*;
@@ -26,6 +29,8 @@ public class FarmHelper extends BaseModule {
 
     // 设置组，用于组织模块的设置选项
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgBonemeal = settings.createGroup("骨粉");
+    private final SettingGroup sgRender = settings.createGroup("渲染");
 
     // 工作模式设置
     private final Setting<WorkMode> workMode = sgGeneral.add(new EnumSetting.Builder<WorkMode>()
@@ -61,19 +66,123 @@ public class FarmHelper extends BaseModule {
     private final Setting<SortMode> sortMode = sgGeneral.add(new EnumSetting.Builder<SortMode>()
         .name("排序模式").description("如何排序要处理的方块").defaultValue(SortMode.Farthest).build());
 
+    // 骨粉设置
+    private final Setting<Boolean> useBonemeal = sgBonemeal.add(new BoolSetting.Builder()
+        .name("使用骨粉")
+        .description("启用骨粉催熟作物功能")
+        .defaultValue(false)
+        .build());
+
+    private final Setting<Integer> bonemealDelay = sgBonemeal.add(new IntSetting.Builder()
+        .name("骨粉延迟")
+        .description("使用骨粉之间的延迟")
+        .defaultValue(1)
+        .min(0)
+        .sliderMax(20)
+        .build());
+
+    private final Setting<Integer> bonemealRange = sgBonemeal.add(new IntSetting.Builder()
+        .name("骨粉范围")
+        .description("骨粉使用的水平范围")
+        .defaultValue(4)
+        .min(1)
+        .sliderMax(6)
+        .build());
+
+    private final Setting<Integer> maxBonemealAttempts = sgBonemeal.add(new IntSetting.Builder()
+        .name("最大骨粉次数")
+        .description("对单个作物最多使用骨粉的次数")
+        .defaultValue(10)
+        .min(1)
+        .sliderMax(20)
+        .build());
+
+    private final Setting<Boolean> autoSwitchBonemeal = sgBonemeal.add(new BoolSetting.Builder()
+        .name("自动切换骨粉")
+        .description("使用骨粉时自动切换到骨粉")
+        .defaultValue(true)
+        .build());
+
+    // 渲染设置
+    private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
+        .name("显示渲染")
+        .description("是否显示要处理的方块渲染预览")
+        .defaultValue(true)
+        .build());
+
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("渲染模式")
+        .description("选择渲染的显示模式")
+        .defaultValue(ShapeMode.Both)
+        .build());
+
+    private final Setting<SettingColor> tillSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("锄地侧面颜色")
+        .description("要锄地方块的侧面填充颜色")
+        .defaultValue(new SettingColor(139, 69, 19, 30)) // 棕色
+        .build());
+
+    private final Setting<SettingColor> tillLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("锄地线条颜色")
+        .description("要锄地方块的线条颜色")
+        .defaultValue(new SettingColor(139, 69, 19, 255)) // 棕色
+        .build());
+
+    private final Setting<SettingColor> plantSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("种植侧面颜色")
+        .description("要种植位置的侧面填充颜色")
+        .defaultValue(new SettingColor(34, 139, 34, 30)) // 绿色
+        .build());
+
+    private final Setting<SettingColor> plantLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("种植线条颜色")
+        .description("要种植位置的线条颜色")
+        .defaultValue(new SettingColor(34, 139, 34, 255)) // 绿色
+        .build());
+
+    private final Setting<SettingColor> harvestSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("收割侧面颜色")
+        .description("要收割作物的侧面填充颜色")
+        .defaultValue(new SettingColor(255, 215, 0, 30)) // 金色
+        .build());
+
+    private final Setting<SettingColor> harvestLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("收割线条颜色")
+        .description("要收割作物的线条颜色")
+        .defaultValue(new SettingColor(255, 215, 0, 255)) // 金色
+        .build());
+
+    private final Setting<SettingColor> bonemealSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("骨粉侧面颜色")
+        .description("要使用骨粉作物的侧面填充颜色")
+        .defaultValue(new SettingColor(255, 255, 255, 30)) // 白色
+        .build());
+
+    private final Setting<SettingColor> bonemealLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("骨粉线条颜色")
+        .description("要使用骨粉作物的线条颜色")
+        .defaultValue(new SettingColor(255, 255, 255, 255)) // 白色
+        .build());
+
     // 计时器
-    private int tillTimer, plantTimer, harvestTimer;
+    private int tillTimer, plantTimer, harvestTimer, bonemealTimer;
 
     // 背包扫描
     private Map<Item, Integer> availableTools;
     private int toolSlotCurrent = -1;
     private Map<Item, Integer> availableSeeds;
+    private Map<Item, Integer> availableBonemeal;
+    private int bonemealSlotCurrent = -1;
     private long lastInventoryScanTime = 0;
     private static final long INVENTORY_SCAN_INTERVAL = 1000; // 1秒扫描一次背包
+
+    // 骨粉使用记录
+    private Map<BlockPos, Integer> bonemealCount;
 
     // 错误消息控制
     private long lastHoeErrorTime = 0;
     private long lastSeedErrorTime = 0;
+    private long lastBonemealErrorTime = 0;
     private static final long ERROR_COOLDOWN = 5000; // 5秒冷却时间
 
     public FarmHelper() {
@@ -87,8 +196,11 @@ public class FarmHelper extends BaseModule {
         tillTimer = 0;
         plantTimer = 0;
         harvestTimer = 0;
+        bonemealTimer = 0;
         availableTools = new HashMap<>();
         availableSeeds = new HashMap<>();
+        availableBonemeal = new HashMap<>();
+        bonemealCount = new HashMap<>();
         lastInventoryScanTime = 0;
     }
 
@@ -98,6 +210,7 @@ public class FarmHelper extends BaseModule {
         tillTimer--;
         plantTimer--;
         harvestTimer--;
+        bonemealTimer--;
 
         // 扫描背包中的工具和种子
         scanInventory();
@@ -131,6 +244,15 @@ public class FarmHelper extends BaseModule {
             }
             harvestTimer = harvestDelay.get();
         }
+
+        // 骨粉（独立于工作模式）
+        if (useBonemeal.get() && bonemealTimer <= 0) {
+            BlockPos bonemealPos = findBonemealPosition();
+            if (bonemealPos != null) {
+                doBonemeal(bonemealPos);
+            }
+            bonemealTimer = bonemealDelay.get();
+        }
     }
 
     // 扫描背包中的工具和种子
@@ -142,7 +264,9 @@ public class FarmHelper extends BaseModule {
 
         availableTools.clear();
         availableSeeds.clear();
+        availableBonemeal.clear();
         toolSlotCurrent = -1;
+        bonemealSlotCurrent = -1;
         // 扫描锄头
         List<Item> tools = Arrays.asList(Items.WOODEN_HOE, Items.STONE_HOE, Items.IRON_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
         for (Item tool : tools) {
@@ -192,6 +316,19 @@ public class FarmHelper extends BaseModule {
                     availableSeeds.put(Items.MELON_SEEDS, melonSlot);
                 }
                 break;
+            case NetherWart:
+                int netherWartSlot = BagUtil.findItemInventorySlot(Items.NETHER_WART);
+                if (netherWartSlot != -1) {
+                    availableSeeds.put(Items.NETHER_WART, netherWartSlot);
+                }
+                break;
+        }
+
+        // 扫描骨粉
+        int bonemealSlot = BagUtil.findItemInventorySlot(Items.BONE_MEAL);
+        if (bonemealSlot != -1) {
+            availableBonemeal.put(Items.BONE_MEAL, bonemealSlot);
+            bonemealSlotCurrent = bonemealSlot;
         }
 
         lastInventoryScanTime = currentTime;
@@ -269,11 +406,25 @@ public class FarmHelper extends BaseModule {
         return mc.world.getBlockState(pos).getBlock() == Blocks.FARMLAND;
     }
 
+    // 检查方块是否是灵魂沙
+    private boolean isSoulSand(BlockPos pos) {
+        return mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_SAND;
+    }
+
     // 检查耕地是否可以种植
     private boolean canPlantOnFarmland(BlockPos pos) {
-        // 检查下方是否是耕地
-        if (!isFarmland(pos)) {
-            return false;
+        // 检查下方是否是耕地或灵魂沙（地狱疣）
+        CropType type = cropType.get();
+        if (type == CropType.NetherWart) {
+            // 地狱疣需要种植在灵魂沙上
+            if (!isSoulSand(pos)) {
+                return false;
+            }
+        } else {
+            // 其他作物需要耕地
+            if (!isFarmland(pos)) {
+                return false;
+            }
         }
 
         // 检查上方是否是空气
@@ -287,7 +438,6 @@ public class FarmHelper extends BaseModule {
             return false;
         }
         // 检查是否有对应的种子
-        CropType type = cropType.get();
         switch (type) {
             case Wheat:
                 return availableSeeds.containsKey(Items.WHEAT_SEEDS);
@@ -301,6 +451,8 @@ public class FarmHelper extends BaseModule {
                 return availableSeeds.containsKey(Items.PUMPKIN_SEEDS);
             case Melon:
                 return availableSeeds.containsKey(Items.MELON_SEEDS);
+            case NetherWart:
+                return availableSeeds.containsKey(Items.NETHER_WART);
             default:
                 return false;
         }
@@ -322,6 +474,9 @@ public class FarmHelper extends BaseModule {
         } else if (block == Blocks.BEETROOTS) {
             // 甜菜根
             return state.get(BeetrootsBlock.AGE) >= 3;
+        } else if (block == Blocks.NETHER_WART) {
+            // 甜菜根
+            return state.get(NetherWartBlock.AGE) >= 3;
         }
 
         return false;
@@ -338,6 +493,7 @@ public class FarmHelper extends BaseModule {
             block == Blocks.PUMPKIN ||
             block == Blocks.CARROTS ||
             block == Blocks.POTATOES ||
+            block == Blocks.NETHER_WART ||
             block == Blocks.BEETROOTS) {
 
             // 如果设置了仅收割成熟，则检查是否成熟
@@ -496,6 +652,9 @@ public class FarmHelper extends BaseModule {
             case Melon:
                 seed = Items.MELON_SEEDS;
                 break;
+            case NetherWart:
+                seed = Items.NETHER_WART;
+                break;
         }
 
         if (seed != null) {
@@ -517,7 +676,7 @@ public class FarmHelper extends BaseModule {
         }
 
         // 种植种子（在耕地上方）
-        BlockPos plantPos = pos.up();
+        BlockPos plantPos = pos;
         BaritoneUtil.clickBlock(plantPos, Direction.UP, true, Hand.MAIN_HAND, BaritoneUtil.SwingSide.All);
 
         // 切换回原来的物品
@@ -541,6 +700,91 @@ public class FarmHelper extends BaseModule {
         // 切换回原来的物品
         if (shouldSwitchToHoe) {
             BagUtil.doSwap(toolSlotCurrent);
+        }
+    }
+
+    // 查找要使用骨粉的位置
+    private BlockPos findBonemealPosition() {
+        if (availableBonemeal.isEmpty()) {
+            return null;
+        }
+
+        List<BlockPos> validPositions = new ArrayList<>();
+        BlockPos playerPos = mc.player.getBlockPos();
+        List<BlockPos> nearbyPositions = WorldUtils.getSphere(playerPos, bonemealRange.get(), 2);
+
+        // 遍历附近的位置，找到可以使用骨粉的位置
+        for (BlockPos pos : nearbyPositions) {
+            if (canBonemealBlock(pos)) {
+                validPositions.add(pos);
+            }
+        }
+
+        if (validPositions.isEmpty()) {
+            return null;
+        }
+
+        // 根据距离排序
+        validPositions.sort(Comparator.comparingDouble(PlayerUtils::distanceTo));
+
+        // 根据排序模式决定使用最近还是最远的位置
+        if (sortMode.get() == SortMode.Farthest) {
+            Collections.reverse(validPositions);
+        }
+
+        return validPositions.get(0);
+    }
+
+    // 检查方块是否可以使用骨粉
+    private boolean canBonemealBlock(BlockPos pos) {
+        BlockState state = mc.world.getBlockState(pos);
+        Block block = state.getBlock();
+
+        // 检查是否是作物
+        if (block instanceof CropBlock ||
+            block == Blocks.MELON_STEM ||
+            block == Blocks.PUMPKIN_STEM ||
+            block == Blocks.CARROTS ||
+            block == Blocks.POTATOES ||
+            block == Blocks.NETHER_WART ||
+            block == Blocks.BEETROOTS) {
+
+            // 检查是否未成熟
+            if (!isCropMature(pos)) {
+                // 检查骨粉使用次数
+                int currentCount = bonemealCount.getOrDefault(pos, 0);
+                return currentCount < maxBonemealAttempts.get();
+            }
+        }
+
+        return false;
+    }
+
+    // 执行骨粉使用操作
+    private void doBonemeal(BlockPos pos) {
+        if (bonemealSlotCurrent == -1) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastBonemealErrorTime >= ERROR_COOLDOWN) {
+                error("背包中没有找到骨粉");
+                lastBonemealErrorTime = currentTime;
+            }
+            return;
+        }
+
+        // 切换到骨粉
+        if (autoSwitchBonemeal.get()) {
+            BagUtil.doSwap(bonemealSlotCurrent);
+        }
+
+        // 使用骨粉
+        BaritoneUtil.clickBlock(pos, Direction.UP, true, Hand.MAIN_HAND, BaritoneUtil.SwingSide.All);
+
+        // 更新使用次数
+        int currentCount = bonemealCount.getOrDefault(pos, 0);
+        bonemealCount.put(pos, currentCount + 1);
+        // 切换回原来的物品
+        if (autoSwitchBonemeal.get()) {
+            BagUtil.doSwap(bonemealSlotCurrent);
         }
     }
 
@@ -570,7 +814,8 @@ public class FarmHelper extends BaseModule {
         Potato("土豆"),
         Beetroot("甜菜根"),
         Pumpkin("南瓜"),
-        Melon("西瓜");
+        Melon("西瓜"),
+        NetherWart("地狱疣");
 
         private final String displayName;
 
@@ -599,5 +844,94 @@ public class FarmHelper extends BaseModule {
         public String toString() {
             return displayName;
         }
+    }
+
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (!render.get() || mc.player == null || mc.world == null) return;
+
+        WorkMode mode = workMode.get();
+
+        // 渲染要锄地的位置
+        if (mode == WorkMode.All || mode == WorkMode.Till) {
+            renderTillPositions(event);
+        }
+
+        // 渲染要种植的位置
+        if (mode == WorkMode.All || mode == WorkMode.Plant) {
+            renderPlantPositions(event);
+        }
+
+        // 渲染要收割的位置
+        if (mode == WorkMode.All || mode == WorkMode.Harvest) {
+            renderHarvestPositions(event);
+        }
+
+        // 渲染要使用骨粉的位置（独立于工作模式）
+        if (useBonemeal.get()) {
+            renderBonemealPositions(event);
+        }
+    }
+
+    private void renderTillPositions(Render3DEvent event) {
+        if (availableTools.isEmpty()) return;
+
+        BlockPos playerPos = mc.player.getBlockPos();
+        List<BlockPos> nearbyPositions = WorldUtils.getSphere(playerPos, tillRange.get(), 1);
+
+        for (BlockPos pos : nearbyPositions) {
+            if (canTillBlock(pos)) {
+                renderBlock(event, pos, tillSideColor.get(), tillLineColor.get());
+            }
+        }
+    }
+
+    private void renderPlantPositions(Render3DEvent event) {
+        if (availableSeeds.isEmpty()) return;
+
+        BlockPos playerPos = mc.player.getBlockPos();
+        List<BlockPos> nearbyPositions = WorldUtils.getSphere(playerPos, plantRange.get(), 2);
+
+        for (BlockPos pos : nearbyPositions) {
+            if (canPlantOnFarmland(pos)) {
+                // 渲染耕地或灵魂沙上的空气位置（种子将要种植的位置）
+                renderBlock(event, pos.up(), plantSideColor.get(), plantLineColor.get());
+            }
+        }
+    }
+
+    private void renderHarvestPositions(Render3DEvent event) {
+        BlockPos playerPos = mc.player.getBlockPos();
+        List<BlockPos> nearbyPositions = WorldUtils.getSphere(playerPos, harvestRange.get(), 2);
+
+        for (BlockPos pos : nearbyPositions) {
+            if (canHarvestBlock(pos)) {
+                renderBlock(event, pos, harvestSideColor.get(), harvestLineColor.get());
+            }
+        }
+    }
+
+    private void renderBonemealPositions(Render3DEvent event) {
+        if (availableBonemeal.isEmpty()) return;
+
+        BlockPos playerPos = mc.player.getBlockPos();
+        List<BlockPos> nearbyPositions = WorldUtils.getSphere(playerPos, bonemealRange.get(), 2);
+
+        for (BlockPos pos : nearbyPositions) {
+            if (canBonemealBlock(pos)) {
+                renderBlock(event, pos, bonemealSideColor.get(), bonemealLineColor.get());
+            }
+        }
+    }
+
+    private void renderBlock(Render3DEvent event, BlockPos pos, SettingColor sideColor, SettingColor lineColor) {
+        double x1 = pos.getX();
+        double y1 = pos.getY();
+        double z1 = pos.getZ();
+        double x2 = pos.getX() + 1;
+        double y2 = pos.getY() + 1;
+        double z2 = pos.getZ() + 1;
+
+        event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor, lineColor, shapeMode.get(), 0);
     }
 }

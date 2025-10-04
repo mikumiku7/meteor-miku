@@ -57,9 +57,16 @@ public class MikuMikuAddon extends MeteorAddon {
         modules.add(new EntityList());
         modules.add(new AutoTouchFire());
         modules.add(new FarmHelper());
+        modules.add(new AutoXP());
+        modules.add(new ChestAura());
+        modules.add(new FastFall());
+        modules.add(new TridentFly());
+        modules.add(new ElytraFlyPlus());
+        modules.add(new HighwayBlocker());
+        modules.add(new HighwayClearer());
 //        modules.add(new MikuModule(CATEGORY, "miku", "miku"));
 //        MikuModule mikuModule = new MikuModule(CATEGORY, "miku插件", "miku");
-        ChatUtils.warning("Miku插件完全开源免费。如果你在别处付费了，那么就当获取信息的费用了。后续更新免费获取地址: https://github.com/mikumiku7/meteor-miku/releases");
+        ChatUtils.warning("Miku插件完全开源免费。更新免费获取地址: https://github.com/mikumiku7/meteor-miku/releases");
         ChatUtils.warning("Miku插件群：1013297171");
         // Commands
         Commands.add(new CommandMiku());

@@ -1,14 +1,11 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
-import com.github.mikumiku.addon.MikuMikuAddon;
 import com.github.mikumiku.addon.util.BagUtil;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.world.BlockIterator;
 import meteordevelopment.orbit.EventHandler;
@@ -128,7 +125,7 @@ public class LiquidFiller extends BaseModule {
     private int timer;
 
     public LiquidFiller() {
-        super(MikuMikuAddon.CATEGORY, "自动填水填海", "自动将方块放置在您范围内的水源方块内。");
+        super("自动填水填海", "自动将方块放置在您范围内的水源方块内。");
     }
 
     @Override
@@ -154,13 +151,13 @@ public class LiquidFiller extends BaseModule {
         double pZ = mc.player.getZ();
 
         // 查找包含方块的槽位
-        FindItemResult item;
+        int itemSlot = -1;
         if (listMode.get() == ListMode.Whitelist) {
-            item = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && whitelist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
+            itemSlot = BagUtil.findItemInventorySlot(itemStack -> itemStack.getItem() instanceof BlockItem && whitelist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
         } else {
-            item = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && !blacklist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
+            itemSlot = BagUtil.findItemInventorySlot(itemStack -> itemStack.getItem() instanceof BlockItem && !blacklist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
         }
-        if (!item.found()) return;
+        if (itemSlot == -1) return;
 
         long now = System.currentTimeMillis();
 
@@ -190,6 +187,7 @@ public class LiquidFiller extends BaseModule {
             blocks.add(blockPos.mutableCopy());
         });
 
+        int finalItemSlot = itemSlot;
         BlockIterator.after(() -> {
             // 排序方块
             if (sortMode.get() == SortMode.TopDown || sortMode.get() == SortMode.BottomUp)
@@ -211,9 +209,9 @@ public class LiquidFiller extends BaseModule {
                 }
 
 
-                BagUtil.doSwap(item.slot());
-                BaritoneUtil.placeBlock(pos, true, true, true);
-                BagUtil.doSwap(item.slot());
+                BagUtil.doSwap(finalItemSlot);
+                BaritoneUtil.placeBlock(pos);
+                BagUtil.doSwap(finalItemSlot);
 
                 failedCache.put(pos, System.currentTimeMillis());
 

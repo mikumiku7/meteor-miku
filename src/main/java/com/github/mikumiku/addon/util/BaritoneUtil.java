@@ -30,6 +30,10 @@ import java.util.Set;
 /**
  * Baritone 工具类，提供方块放置、交互和实体检测等功能
  *
+ * 通常
+ * 放置范围最大为5
+ * 挖掘范围最大为6
+ *
  * @author MikuMiku
  */
 public class BaritoneUtil {

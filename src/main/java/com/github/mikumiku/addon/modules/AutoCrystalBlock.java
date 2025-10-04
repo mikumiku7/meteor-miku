@@ -292,7 +292,7 @@ public class AutoCrystalBlock extends BaseModule {
         // 切换到对应物品
         BagUtil.doSwap(blockResult.slot());
 
-        boolean success = BaritoneUtil.placeBlock(pos, true, true, true);
+        boolean success = BaritoneUtil.placeBlock(pos);
 
         BagUtil.doSwap(blockResult.slot());
 

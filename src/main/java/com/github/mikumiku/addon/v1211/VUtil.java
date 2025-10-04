@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.v1211;
 
 import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -56,6 +57,14 @@ public class VUtil {
         return mc.player.isFallFlying();
     }
 
+    public static boolean isJumping(MinecraftClient mc) {
+        return mc.player.input.jumping;
+    }
+
+    public static boolean isSneaking(MinecraftClient mc) {
+        return mc.player.input.sneaking;
+
+    }
     public static Direction getOppositeDirectionTo(BlockPos blockPos) {
         Direction dir = Direction.fromRotation(Rotations.getYaw(blockPos)).getOpposite();
 
@@ -68,4 +77,8 @@ public class VUtil {
     public static void setRaycast(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
         raycastContext.set(source, vec3d, shapeType, fluidHandling, player);
     }
+    public static void setMovement(IVec3d movement, double x, double y, double z) {
+        movement.set(x, y, z);
+    }
+
 }

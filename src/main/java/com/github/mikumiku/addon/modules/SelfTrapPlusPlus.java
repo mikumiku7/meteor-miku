@@ -396,7 +396,7 @@ public class SelfTrapPlusPlus extends BaseModule {
         }
 
         // Place the block
-        boolean success = BaritoneUtil.placeBlock(neighbor, direction, placeSwing.get(), false);
+        boolean success = BaritoneUtil.placeBlock(neighbor, direction, placeSwing.get(), true);
 
         // Swing hand if needed
         if (placeSwing.get()) {

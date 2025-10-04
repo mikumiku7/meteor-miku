@@ -145,7 +145,7 @@ public class GhostMine extends BaseModule {
     );
 
     public GhostMine() {
-        super("极速挖掘", "使用发包快速挖掘方块");
+        super("发包挖掘", "使用发包快速挖掘方块");
     }
 
     @Override

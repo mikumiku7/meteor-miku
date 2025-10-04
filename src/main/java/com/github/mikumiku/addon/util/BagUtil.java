@@ -85,6 +85,28 @@ public class BagUtil {
         return -1;
     }
 
+    public static int findItemInventorySlot(Item item) {
+        for (int i = 0; i < 45; i++) {
+            ItemStack stack = MeteorClient.mc.player.getInventory().getStack(i);
+            if (stack.getItem() == item) {
+                return i < 9 ? i + 36 : i;
+            }
+        }
+
+        return -1;
+    }
+
+    public static int findItemInventorySlot(Predicate<ItemStack> isGood) {
+        for (int i = 0; i < 45; i++) {
+            ItemStack stack = MeteorClient.mc.player.getInventory().getStack(i);
+            if (isGood.test(stack)) {
+                return i < 9 ? i + 36 : i;
+            }
+        }
+
+        return -1;
+    }
+
     public static int findItemInvSlotGrim(Item item) {
         for (int i = 9; i < 45; i++) {
             ItemStack stack = MeteorClient.mc.player.getInventory().getStack(i);
@@ -435,16 +457,6 @@ public class BagUtil {
         MeteorClient.mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));
     }
 
-    public static int findItemInventorySlot(Item item) {
-        for (int i = 0; i < 45; i++) {
-            ItemStack stack = MeteorClient.mc.player.getInventory().getStack(i);
-            if (stack.getItem() == item) {
-                return i < 9 ? i + 36 : i;
-            }
-        }
-
-        return -1;
-    }
 
     public static class Action {
         private SlotActionType type = null;
