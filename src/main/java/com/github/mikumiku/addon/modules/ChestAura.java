@@ -1,7 +1,9 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.BaritoneUtil;
+import com.github.mikumiku.addon.util.InventoryUtil;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.InventoryEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -143,7 +145,7 @@ public class ChestAura extends BaseModule {
         @EventHandler(priority = EventPriority.HIGH)
         private void onInventory(InventoryEvent event) {
             ScreenHandler handler = mc.player.currentScreenHandler;
-            if (event.packet.getSyncId() == handler.syncId) {
+            if (DV.of(InventoryUtil.class).getSyncId(event.packet) == handler.syncId) {
                 // 如果启用全部丢出功能，先丢出所有物品
                 if (dropAll.get()) {
                     dropAllItems(handler);

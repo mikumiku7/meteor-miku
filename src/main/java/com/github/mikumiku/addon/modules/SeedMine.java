@@ -3,7 +3,9 @@ package com.github.mikumiku.addon.modules;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.BetterBlockPos;
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.Ore;
+import com.github.mikumiku.addon.util.RegistryUtil;
 import com.github.mikumiku.addon.util.seeds.Seed;
 import com.github.mikumiku.addon.util.seeds.Seeds;
 import com.seedfinding.mccore.version.MCVersion;
@@ -116,7 +118,7 @@ public class SeedMine extends BaseModule {
     public SeedMine() {
         super("种子矿透", "种子透视增强版。输入种子，算出矿物实际位置。注意必须使用基于彗星版的男中音。基于meteor_rejects");
         SettingGroup sgOres = settings.createGroup("矿物");
-        Ore.oreSettings.forEach(sgOres::add);
+        RegistryUtil.oreSettings.forEach(sgOres::add);
     }
 
     public boolean baritone() {
@@ -262,7 +264,7 @@ public class SeedMine extends BaseModule {
 
         BetterBlockPos betterBlockPos = BetterBlockPos.from(nearestTarget);
 
-        List<String> ores = Ore.oreSettings.stream()
+        List<String> ores = RegistryUtil.oreSettings.stream()
             .filter(setting -> setting.get())
             .map(setting -> setting.description)
             .map(setting -> setting.toLowerCase())
@@ -344,7 +346,7 @@ public class SeedMine extends BaseModule {
         Seed seed = Seeds.get().getSeed();
         if (seed == null) return;
         worldSeed = seed;
-        oreConfig = Ore.getRegistry(PlayerUtils.getDimension());
+        oreConfig = DV.of(RegistryUtil.class).getRegistry(PlayerUtils.getDimension());
         oreGoals.clear();
         chunkRenderers.clear();
         if (mc.world != null && worldSeed != null) {

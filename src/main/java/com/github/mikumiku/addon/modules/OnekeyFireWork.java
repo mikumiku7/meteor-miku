@@ -2,14 +2,17 @@ package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.BagUtil;
+import com.github.mikumiku.addon.util.ItemUtil;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.ArmorItem;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
@@ -28,7 +31,7 @@ public class OnekeyFireWork extends BaseModule {
         );
 
         this.delay = 0;
-        this.slotBefore = mc.player == null ? 0 : mc.player.getInventory().selectedSlot;
+        this.slotBefore = mc.player == null ? 0 : DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
         this.sgGeneral = this.settings.getDefaultGroup();
         this.closeDelay = this.sgGeneral
             .add(
@@ -45,7 +48,7 @@ public class OnekeyFireWork extends BaseModule {
     public void onActivate() {
         this.fire();
         this.delay = this.closeDelay.get();
-        this.slotBefore = mc.player == null ? 0 : mc.player.getInventory().selectedSlot;
+        this.slotBefore = mc.player == null ? 0 : DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
     }
 
     @EventHandler
@@ -64,22 +67,22 @@ public class OnekeyFireWork extends BaseModule {
         try {
             if (!mc.player.isOnGround()) {
                 if ("elytra".equals(mc.player.getInventory().getStack(38).getItem().getName())) {
-                    if (!(mc.player.getMainHandStack().getItem() instanceof ArmorItem)) {
+                    if (!DV.of(ItemUtil.class).isArmorItem(mc.player.getMainHandStack().getItem())) {
                         if (mc.player.getMainHandStack().getItem() == Items.FIREWORK_ROCKET) {
                             firework();
                         } else {
                             int fireworkSlot;
                             if ((fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot()) != -1) {
-                                int old = mc.player.getInventory().selectedSlot;
+                                int old = DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
                                 BagUtil.switchToSlot(fireworkSlot);
                                 firework();
                                 BagUtil.switchToSlot(old);
 
                                 mc.getNetworkHandler().sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
                             } else if ((fireworkSlot = InvUtils.find(Items.FIREWORK_ROCKET).slot()) != -1) {
-                                BagUtil.inventorySwap(fireworkSlot, mc.player.getInventory().selectedSlot);
+                                BagUtil.inventorySwap(fireworkSlot, DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()));
                                 firework();
-                                BagUtil.inventorySwap(fireworkSlot, mc.player.getInventory().selectedSlot);
+                                BagUtil.inventorySwap(fireworkSlot, DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()));
                                 BagUtil.sync();
                             }
                         }

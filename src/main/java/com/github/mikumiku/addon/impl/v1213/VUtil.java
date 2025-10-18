@@ -1,4 +1,4 @@
-package com.github.mikumiku.addon.v1214;
+package com.github.mikumiku.addon.impl.v1213;
 
 import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -23,22 +23,22 @@ import net.minecraft.world.RaycastContext;
 
 import java.util.Optional;
 
-public class VUtil {
-    public static ItemStack getEnchantedBookWith(Optional<RegistryEntry.Reference<Enchantment>> en) {
+public class VUtil implements com.github.mikumiku.addon.util.VUtil {
+    public ItemStack getEnchantedBookWith(Optional<RegistryEntry.Reference<Enchantment>> en) {
         return EnchantmentHelper.getEnchantedBookWith(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
     }
 
-    public static Registry<Enchantment> getEnchantmentRegistry() {
+    public Registry<Enchantment> getEnchantmentRegistry() {
         DynamicRegistryManager registryManager = MinecraftClient.getInstance().world.getRegistryManager();
         return registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
     }
 
 
-    public static PlayerMoveC2SPacket.LookAndOnGround get(float currentYaw, float pitch, boolean onGround) {
+    public PlayerMoveC2SPacket.LookAndOnGround get(float currentYaw, float pitch, boolean onGround) {
         return new PlayerMoveC2SPacket.LookAndOnGround(currentYaw, pitch, onGround, false);
     }
 
-    public static PlayerMoveC2SPacket.Full getFull(double x, double y, double z, float yaw, float pitch, boolean onGround) {
+    public PlayerMoveC2SPacket.Full getFull(double x, double y, double z, float yaw, float pitch, boolean onGround) {
         return new PlayerMoveC2SPacket.Full(
             x,
             y,
@@ -49,37 +49,35 @@ public class VUtil {
         );
     }
 
-    public static boolean isFallFlying(MinecraftClient mc) {
+    public boolean isFallFlying(MinecraftClient mc) {
         return mc.player.isGliding();
     }
 
-    public static boolean isJumping(MinecraftClient mc) {
+    public boolean isJumping(MinecraftClient mc) {
         return mc.player.input.playerInput.jump();
     }
 
-    public static boolean isSneaking(MinecraftClient mc) {
+    public boolean isSneaking(MinecraftClient mc) {
         return mc.player.input.playerInput.sneak();
-
     }
 
-    public static Direction getOppositeDirectionTo(BlockPos blockPos) {
-        Direction dir = Direction.fromHorizontalDegrees(Rotations.getYaw(blockPos)).getOpposite();
-
-        return dir;
+    public Direction getOppositeDirectionTo(BlockPos blockPos) {
+        return Direction.fromRotation(Rotations.getYaw(blockPos)).getOpposite();
     }
 
-    public static double getToughness(LivingEntity entity) {
-        double value = entity.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
-        return value;
+    public double getToughness(LivingEntity entity) {
+        return entity.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
     }
 
-    public static void setRaycast(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
+    public void setRaycast(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
         raycastContext.meteor$set(source, vec3d, shapeType, fluidHandling, player);
     }
-    public static void setMovement(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
+
+    public void setMovement(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
         raycastContext.meteor$set(source, vec3d, shapeType, fluidHandling, player);
     }
-    public static void setMovement(IVec3d movement, double x, double y, double z) {
+
+    public void setMovement(IVec3d movement, double x, double y, double z) {
         movement.meteor$set(x, y, z);
     }
 }

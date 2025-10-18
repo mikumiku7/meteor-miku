@@ -4,6 +4,8 @@ import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.utils.BetterBlockPos;
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.pathing.NopPathManager;
 import meteordevelopment.meteorclient.pathing.PathManagers;
@@ -246,7 +248,7 @@ public class ShulkerBoxItemFetcher extends BaseModule {
         }
 
         // Select the shulker box
-        mc.player.getInventory().selectedSlot = shulkerSlot;
+        DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), shulkerSlot);
 
         // Look at the placement position
         lookAtBlock(placePos);

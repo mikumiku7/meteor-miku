@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.util;
 
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.modules.VillagerRoller.RollingEnchantment;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -44,7 +45,7 @@ public class VillagerRollerFileUtils {
             return false;
         }
 
-        NbtList nbtList = nbtData.getList("rolling", NbtElement.COMPOUND_TYPE);
+        NbtList nbtList = DV.of(NbtUtil.class).getRollingList(nbtData, NbtElement.COMPOUND_TYPE);
         searchingEnchants.clear();
 
         for (NbtElement element : nbtList) {

@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -155,17 +157,17 @@ public class AutoTouchFire extends BaseModule {
 
     private void place(int slot) {
         if (slot != -1) {
-            final int preSlot = mc.player.getInventory().selectedSlot;
+            final int preSlot = DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
             if (center.get()) {
                 PlayerUtils.centerPlayer();
             }
-            mc.player.getInventory().selectedSlot = slot;
+            DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), slot);
             float yaw = mc.gameRenderer.getCamera().getYaw() % 360;
             float pitch = mc.gameRenderer.getCamera().getPitch() % 360;
 
             Rotations.rotate(yaw, 90);
             mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.getInventory().selectedSlot = preSlot;
+            DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), preSlot);
             Rotations.rotate(yaw, pitch);
 
         }

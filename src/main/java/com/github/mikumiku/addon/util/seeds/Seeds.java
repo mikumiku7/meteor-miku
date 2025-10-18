@@ -1,5 +1,8 @@
 package com.github.mikumiku.addon.util.seeds;
 
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.EventUtil;
+import com.github.mikumiku.addon.util.NbtUtil;
 import com.seedfinding.mccore.version.MCVersion;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.systems.System;
@@ -80,7 +83,7 @@ public class Seeds extends System<Seeds> {
     @Override
     public Seeds fromTag(NbtCompound tag) {
         tag.getKeys().forEach(key -> {
-            seeds.put(key, Seed.fromTag(tag.getCompound(key)));
+            seeds.put(key, Seed.fromTag(DV.of(NbtUtil.class).getCompound(tag, key)));
         });
         return this;
     }
@@ -100,8 +103,8 @@ public class Seeds extends System<Seeds> {
         MutableText cmdText = Text.literal(cmd + "<version>");
         cmdText.setStyle(cmdText.getStyle()
             .withUnderline(true)
-            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, cmd))
-            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run command")))
+            .withClickEvent(DV.of(EventUtil.class).of(ClickEvent.Action.SUGGEST_COMMAND, cmd))
+            .withHoverEvent(DV.of(EventUtil.class).of(HoverEvent.Action.SHOW_TEXT, Text.literal("run command")))
         );
         msg.append(cmdText);
         msg.setStyle(msg.getStyle()

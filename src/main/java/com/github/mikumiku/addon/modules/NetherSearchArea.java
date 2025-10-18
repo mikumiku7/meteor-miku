@@ -4,6 +4,8 @@ package com.github.mikumiku.addon.modules;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalXZ;
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
@@ -284,7 +286,7 @@ public class NetherSearchArea extends BaseModule {
     private boolean isCloseEnoughToTarget(BlockPos target) {
         if (mc.player == null) return false;
 
-        Vec3d playerPos = mc.player.getPos();
+        Vec3d playerPos = DV.of(PlayerUtil.class).getEntityPos(mc.player);
         double distance = Math.sqrt(
             Math.pow(playerPos.x - target.getX(), 2) +
                 Math.pow(playerPos.z - target.getZ(), 2)

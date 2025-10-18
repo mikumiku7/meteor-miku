@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.ChatUtils;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
@@ -196,12 +197,12 @@ public class FastFall extends BaseModule {
 
         // 检查玩家状态
         if (mc.player.isRiding() ||
-            VUtil.isFallFlying(mc) ||
+            DV.of(VUtil.class).isFallFlying(mc) ||
             mc.player.isClimbing() ||
             mc.player.isInLava() ||
             mc.player.isTouchingWater() ||
-            VUtil.isSneaking(mc) ||
-            VUtil.isJumping(mc)) {
+            DV.of(VUtil.class).isSneaking(mc) ||
+            DV.of(VUtil.class).isJumping(mc)) {
             return false;
         }
 

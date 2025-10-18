@@ -2,6 +2,8 @@ package com.github.mikumiku.addon.modules;
 
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -214,7 +216,7 @@ public class PlayerAlert extends BaseModule {
                 continue;
             }
 
-            String playerName = player.getGameProfile().getName();
+            String playerName = DV.of(PlayerUtil.class).getGameProfileName(player);
             double distance = mc.player.distanceTo(player);
 
             // 检查是否为敌对玩家
@@ -262,7 +264,7 @@ public class PlayerAlert extends BaseModule {
      * 玩家进入视距提醒
      */
     private void alertPlayerEnterRenderDistance(PlayerEntity player, double distance) {
-        String playerName = player.getGameProfile().getName();
+//        String playerName = DV.of(PlayerUtil.class).getGameProfileName(player);
 
         // 播放声音
         if (playSound.get()) {
@@ -294,7 +296,7 @@ public class PlayerAlert extends BaseModule {
      * 玩家进入靠近检测距离提醒
      */
     private void alertPlayerEnterCloseRange(PlayerEntity player, double distance) {
-        String playerName = player.getGameProfile().getName();
+//        String playerName = player.getGameProfile().getName();
 
         // 播放声音
         if (playSound.get()) {
@@ -324,7 +326,7 @@ public class PlayerAlert extends BaseModule {
      * 发送聊天提醒 (进入)
      */
     private void sendChatAlert(PlayerEntity player, double distance, String alertType) {
-        String playerName = player.getGameProfile().getName();
+        String playerName = DV.of(PlayerUtil.class).getGameProfileName(player);
         StringBuilder message = new StringBuilder();
 
         message.append("§c[玩家提醒] §f").append(alertType).append(": §e").append(playerName);

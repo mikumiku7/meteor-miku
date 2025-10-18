@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -148,7 +150,7 @@ public class AutoXP extends BaseModule {
 
         // 切换到经验瓶
         if (slot != PlayerInventory.getHotbarSize() - 1) {
-            mc.player.getInventory().selectedSlot = slot;
+            DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), slot);
         }
 
         // 旋转
@@ -218,7 +220,7 @@ public class AutoXP extends BaseModule {
         }
 
         // 检查盔甲
-        for (ItemStack stack : mc.player.getInventory().armor) {
+        for (ItemStack stack : DV.of(PlayerUtil.class).getArmor(mc.player.getInventory())) {
             if (!isItemFullDurability(stack)) {
                 return false;
             }

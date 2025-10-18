@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.entity.player.InteractItemEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -77,7 +79,7 @@ public class InfiniteElytra extends BaseModule {
     private void onTick(TickEvent.Post event) {
         if (mc.player == null || mc.world == null) return;
 
-        if (!playerWasFlying) playerWasFlying = VUtil.isFallFlying(mc);
+        if (!playerWasFlying) playerWasFlying = DV.of(VUtil.class).isFallFlying(mc);
         if (!playerWasFlying) return;
 
         tickCounter++;
@@ -108,7 +110,7 @@ public class InfiniteElytra extends BaseModule {
                 }
             }
 
-            if (chestStack.getItem() == Items.ELYTRA && !mc.player.isOnGround() && !VUtil.isFallFlying(mc)) {
+            if (chestStack.getItem() == Items.ELYTRA && !mc.player.isOnGround() && !DV.of(VUtil.class).isFallFlying(mc)) {
                 mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
             }
         } else {
@@ -140,12 +142,12 @@ public class InfiniteElytra extends BaseModule {
                 }
 
                 if (rocketSlot != -1) {
-                    int currentSlot = mc.player.getInventory().selectedSlot;
+                    int currentSlot = DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
 
                     if (rocketSlot != currentSlot) {
-                        mc.player.getInventory().selectedSlot = rocketSlot;
+                        DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), rocketSlot);
                         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                        mc.player.getInventory().selectedSlot = currentSlot;
+                        DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), currentSlot);
                     } else {
                         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                     }

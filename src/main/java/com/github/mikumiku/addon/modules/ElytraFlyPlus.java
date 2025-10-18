@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -171,16 +173,16 @@ public class ElytraFlyPlus extends BaseModule {
     private void constantiamTick(PlayerMoveEvent event) {
         Vec3d motion = getMotion(mc.player.getVelocity());
         if (motion != null) {
-            VUtil.setMovement(((IVec3d) event.movement), motion.getX(), motion.getY(), motion.getZ());
+            DV.of(VUtil.class).setMovement(((IVec3d) event.movement), motion.getX(), motion.getY(), motion.getZ());
             event.movement = motion;
         }
     }
 
     private Vec3d getMotion(Vec3d velocity) {
-        if (mc.player.input.movementForward == 0.0F) {
+        if (DV.of(PlayerUtil.class).movementForward(mc.player.input) == 0.0F) {
             return constStop.get() ? new Vec3d(0.0, 0.0, 0.0) : null;
         } else {
-            boolean forward = mc.player.input.movementForward > 0.0F;
+            boolean forward = DV.of(PlayerUtil.class).movementForward(mc.player.input) > 0.0F;
             double yaw = Math.toRadians(mc.player.getYaw() + (forward ? 90 : -90));
             double x = Math.cos(yaw);
             double z = Math.sin(yaw);
@@ -202,7 +204,7 @@ public class ElytraFlyPlus extends BaseModule {
     }
 
     private void waspTick(PlayerMoveEvent event) {
-        if (VUtil.isFallFlying(mc)) {
+        if (DV.of(VUtil.class).isFallFlying(mc)) {
             updateWaspMovement();
             pitch = mc.player.getPitch();
             double cos = Math.cos(Math.toRadians(yaw + 90.0F));
@@ -221,7 +223,7 @@ public class ElytraFlyPlus extends BaseModule {
             if (!mc.options.sneakKey.isPressed() && mc.options.jumpKey.isPressed()) {
                 y = up.get();
             }
-            VUtil.setMovement(((IVec3d) event.movement), x, y, z);
+            DV.of(VUtil.class).setMovement(((IVec3d) event.movement), x, y, z);
 
             mc.player.setVelocity(0.0, 0.0, 0.0);
         }
@@ -229,8 +231,8 @@ public class ElytraFlyPlus extends BaseModule {
 
     private void updateWaspMovement() {
         float yaw = mc.player.getYaw();
-        float f = mc.player.input.movementForward;
-        float s = mc.player.input.movementSideways;
+        float f = DV.of(PlayerUtil.class).movementForward(mc.player.input);
+        float s = DV.of(PlayerUtil.class).movementSideways(mc.player.input);
         if (f > 0.0F) {
             moving = true;
             yaw += s > 0.0F ? -45.0F : (s < 0.0F ? 45.0F : 0.0F);
@@ -242,11 +244,11 @@ public class ElytraFlyPlus extends BaseModule {
             yaw += s > 0.0F ? -90.0F : (s < 0.0F ? 90.0F : 0.0F);
         }
 
-        yaw = yaw;
+        this.yaw = yaw;
     }
 
     private void controlTick(PlayerMoveEvent event) {
-        if (VUtil.isFallFlying(mc)) {
+        if (DV.of(VUtil.class).isFallFlying(mc)) {
             updateControlMovement();
             pitch = 0.0F;
             boolean movingUp = false;
@@ -274,7 +276,7 @@ public class ElytraFlyPlus extends BaseModule {
             if (mc.options.sneakKey.isPressed() && !mc.options.jumpKey.isPressed()) {
                 y = -(Double) down.get();
             }
-            VUtil.setMovement(((IVec3d) event.movement), x, y, z);
+            DV.of(VUtil.class).setMovement(((IVec3d) event.movement), x, y, z);
 
             mc.player.setVelocity(0.0, 0.0, 0.0);
         }
@@ -282,8 +284,8 @@ public class ElytraFlyPlus extends BaseModule {
 
     private void updateControlMovement() {
         float yaw = mc.player.getYaw();
-        float f = mc.player.input.movementForward;
-        float s = mc.player.input.movementSideways;
+        float f = DV.of(PlayerUtil.class).movementForward(mc.player.input);
+        float s = DV.of(PlayerUtil.class).movementSideways(mc.player.input);
         if (f > 0.0F) {
             moving = true;
             yaw += s > 0.0F ? -45.0F : (s < 0.0F ? 45.0F : 0.0F);
@@ -306,7 +308,7 @@ public class ElytraFlyPlus extends BaseModule {
             activeFor = 0;
             return false;
         } else {
-            return VUtil.isFallFlying(mc);
+            return DV.of(VUtil.class).isFallFlying(mc);
         }
     }
 

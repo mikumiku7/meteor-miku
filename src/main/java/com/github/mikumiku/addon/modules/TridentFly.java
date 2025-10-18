@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.orbit.EventHandler;
@@ -172,7 +174,7 @@ public class TridentFly extends BaseModule {
         // 搜索快捷栏中的三叉戟
         for (int i = 0; i < 9; i++) {
             if (mc.player.getInventory().getStack(i).getItem() == Items.TRIDENT) {
-                mc.player.getInventory().selectedSlot = i;
+                DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), i);
                 return;
             }
         }

@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -201,7 +203,7 @@ public class EntityList extends BaseModule {
                 Map<Item, Integer> items2Map = new HashMap<>();
                 Map<Item, Integer> itemsMap = new HashMap<>();
                 Map<EntityType<?>, Integer> entitysMap = new HashMap<>();
-                RegistryKey<World> registryKey = this.mc.player.getWorld().getRegistryKey();
+                RegistryKey<World> registryKey = DV.of(PlayerUtil.class).getEntityWorld(this.mc.player).getRegistryKey();
 
                 for (Entity entity : this.mc.world.getEntities()) {
                     if (entity instanceof ItemEntity itemEntity) {

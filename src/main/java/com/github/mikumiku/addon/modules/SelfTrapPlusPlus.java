@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -406,9 +407,9 @@ public class SelfTrapPlusPlus extends BaseModule {
         // Switch back if we changed slots
         if (getValidHand() == null) {
             switch (switchMode.get()) {
-                case 静默 -> BagUtil.doSwapOnTruth(mc.player.getInventory().selectedSlot);
-                case 拾取静默 -> BagUtil.inventorySwapAtTruth(45, mc.player.getInventory().selectedSlot);
-                case SwitchMode.物品栏切换 -> BagUtil.doSwapOnTruth(mc.player.getInventory().selectedSlot);
+                case 静默 -> BagUtil.doSwapOnTruth(DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()));
+                case 拾取静默 -> BagUtil.inventorySwapAtTruth(45, DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()));
+                case SwitchMode.物品栏切换 -> BagUtil.doSwapOnTruth(DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()));
             }
         }
 

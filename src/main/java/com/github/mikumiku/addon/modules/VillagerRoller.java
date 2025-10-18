@@ -2,9 +2,12 @@ package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.gui.EnchantmentSelectScreen;
+import com.github.mikumiku.addon.util.NbtUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import com.github.mikumiku.addon.util.VillagerRollerFileUtils;
+import com.github.mikumiku.addon.util.VillagerUtil;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
 import meteordevelopment.meteorclient.MeteorClient;
@@ -353,7 +356,7 @@ public class VillagerRoller extends BaseModule {
         super.fromTag(tag);
         if (saveListToConfig.get()) {
 //            NbtList l = tag.getListOrEmpty("rolling");
-            NbtList l = tag.getList("rolling", NbtElement.COMPOUND_TYPE);
+            NbtList l = DV.of(NbtUtil.class).getRollingList(tag, NbtElement.COMPOUND_TYPE);
             searchingEnchants.clear();
             for (NbtElement e : l) {
                 if (e.getType() != NbtElement.COMPOUND_TYPE) {
@@ -458,7 +461,7 @@ public class VillagerRoller extends BaseModule {
             ItemStack book = Items.ENCHANTED_BOOK.getDefaultStack();
             int maxlevel = 255;
             if (en.isPresent()) {
-                book = VUtil.getEnchantedBookWith(en);
+                book = DV.of(VUtil.class).getEnchantedBookWith(en);
                 maxlevel = en.get().value().getMaxLevel();
             }
             table.add(theme.item(book));
@@ -700,7 +703,7 @@ public class VillagerRoller extends BaseModule {
 
             for (Pair<RegistryEntry<Enchantment>, Integer> enchant : getEnchants(sellItem)) {
                 int enchantLevel = enchant.right();
-                var reg = VUtil.getEnchantmentRegistry();
+                var reg = DV.of(VUtil.class).getEnchantmentRegistry();
 
                 String enchantIdString = reg.getId(enchant.key().value()).toString();
                 String enchantName = Names.get(enchant.key());
@@ -830,7 +833,7 @@ public class VillagerRoller extends BaseModule {
                     currentState = State.ROLLING_BREAKING_BLOCK;
                     return;
                 }
-                if (rollingVillager.getVillagerData().getProfession() == VillagerProfession.NONE) {
+                if (DV.of(VillagerUtil.class).isNoneProfession(rollingVillager.getVillagerData())) {
                     // info("Profession cleared");
                     currentState = State.ROLLING_PLACING_BLOCK;
                 }
@@ -882,7 +885,7 @@ public class VillagerRoller extends BaseModule {
                     currentState = State.ROLLING_BREAKING_BLOCK;
                     return;
                 }
-                if (rollingVillager.getVillagerData().getProfession() != VillagerProfession.NONE) {
+                if (!DV.of(VillagerUtil.class).isNoneProfession(rollingVillager.getVillagerData())) {
                     currentState = State.ROLLING_WAITING_FOR_VILLAGER_TRADES;
                     triggerInteract();
                 }
@@ -949,10 +952,10 @@ public class VillagerRoller extends BaseModule {
 //            minLevel = tag.getInt("minLevel", 1);
 //            maxCost = tag.getInt("maxCost", 64);
 //            enabled = tag.getBoolean("enabled", true);
-            enchantment = Identifier.tryParse(tag.getString("enchantment"));
-            minLevel = tag.getInt("minLevel");
-            maxCost = tag.getInt("maxCost");
-            enabled = tag.getBoolean("enabled");
+            enchantment = Identifier.tryParse(DV.of(NbtUtil.class).getString(tag, "enchantment"));
+            minLevel = DV.of(NbtUtil.class).getInt(tag, "minLevel");
+            maxCost = DV.of(NbtUtil.class).getInt(tag, "maxCost");
+            enabled = DV.of(NbtUtil.class).getBoolean(tag, "enabled");
             return this;
         }
     }

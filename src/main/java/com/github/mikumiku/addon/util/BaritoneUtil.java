@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.util;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
@@ -408,7 +409,7 @@ public class BaritoneUtil {
         boolean shouldSneak = (SneakBlocks.contains(state.getBlock()) || isSneakBlockClass(mc.world.getBlockState(result.getBlockPos()).getBlock()))
             && !mc.player.isSneaking();
         if (shouldSneak) {
-            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, Mode.PRESS_SHIFT_KEY));
+            DV.of(PacketUtil.class).sendPressShift();
         }
 
         ActionResult actionResult = placeBlockInternally(result);
@@ -421,7 +422,7 @@ public class BaritoneUtil {
         }
 
         if (shouldSneak) {
-            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, Mode.RELEASE_SHIFT_KEY));
+            DV.of(PacketUtil.class).sendReleaseShift();
         }
 
         return actionResult.isAccepted();

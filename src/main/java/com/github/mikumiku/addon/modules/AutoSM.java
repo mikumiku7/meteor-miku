@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -151,9 +153,9 @@ public class AutoSM extends BaseModule {
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    if (closest == null || mc.player.getPos().distanceTo(player.getPos()) < distance) {
+                    if (closest == null || DV.of(PlayerUtil.class).getEntityPos(mc.player).distanceTo(DV.of(PlayerUtil.class).getEntityPos(player)) < distance) {
                         closest = player;
-                        distance = (float) mc.player.getPos().distanceTo(player.getPos());
+                        distance = (float) DV.of(PlayerUtil.class).getEntityPos(mc.player).distanceTo(DV.of(PlayerUtil.class).getEntityPos(player));
                     }
                 }
             }

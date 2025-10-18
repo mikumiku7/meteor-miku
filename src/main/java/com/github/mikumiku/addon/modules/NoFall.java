@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.orbit.EventHandler;
@@ -19,7 +20,7 @@ public class NoFall extends BaseModule {
         if (!isFalling()) return;
 
         // Grim 模式：发送微小位移数据包并调用着陆
-        mc.getNetworkHandler().sendPacket(VUtil.getFull(
+        mc.getNetworkHandler().sendPacket(DV.of(VUtil.class).getFull(
             mc.player.getX(),
             mc.player.getY() + 0.000000001,
             mc.player.getZ(),
@@ -33,6 +34,6 @@ public class NoFall extends BaseModule {
     private boolean isFalling() {
         return mc.player.fallDistance > mc.player.getSafeFallDistance()
             && !mc.player.isOnGround()
-            && !VUtil.isFallFlying(mc);
+            && !DV.of(VUtil.class).isFallFlying(mc);
     }
 }

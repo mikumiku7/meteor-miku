@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -248,7 +249,7 @@ public class HandsomeSpin extends BaseModule {
 
         // 同时发送到服务器确保其他玩家也能看到
         mc.player.networkHandler.sendPacket(
-            VUtil.get(currentYaw,
+            DV.of(VUtil.class).get(currentYaw,
                 mc.player.getPitch(),
                 mc.player.isOnGround())
 
