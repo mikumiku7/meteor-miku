@@ -32,6 +32,7 @@ public class WorldUtils {
         return blocks;
     }
 
+
     public static List<BlockPos> getSphere(double range) {
         Vec3d pos = MinecraftClient.getInstance().player.getEyePos();
 

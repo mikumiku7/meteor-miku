@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.BaritoneUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -10,6 +12,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -58,6 +61,13 @@ public class HandsomeSpin extends BaseModule {
     private final Setting<Boolean> showStatus = sgGeneral.add(new BoolSetting.Builder()
         .name("显示状态")
         .description("在聊天中显示旋转状态信息")
+        .defaultValue(true)
+        .build());
+
+    // 是否启用炫酷特效
+    private final Setting<Boolean> handSwing = sgGeneral.add(new BoolSetting.Builder()
+        .name("挥手")
+        .description("启用高速挥手")
         .defaultValue(true)
         .build());
 
@@ -160,6 +170,12 @@ public class HandsomeSpin extends BaseModule {
 
         // 执行旋转
         performSpin();
+
+        // 执行挥手动画
+        if (handSwing.get()) {
+            performHandSwing();
+        }
+
         tickCounter++;
 
         // 检查里程碑
@@ -233,12 +249,36 @@ public class HandsomeSpin extends BaseModule {
 
         // 同时发送到服务器确保其他玩家也能看到
         mc.player.networkHandler.sendPacket(
-            VUtil.get(currentYaw,
+            DV.of(VUtil.class).get(currentYaw,
                 mc.player.getPitch(),
                 mc.player.isOnGround())
 
         );
 
+    }
+
+    /**
+     * 执行挥手动画
+     */
+    private void performHandSwing() {
+        if (mc.player == null) return;
+
+        // 根据旋转角度确定挥手方向
+        float angleToAdd = rotationAngle.get().floatValue();
+        Hand handToSwing;
+
+        // 根据旋转方向选择挥手的手
+        if (angleToAdd > 0) {
+            // 正向旋转（顺时针）使用主手挥手
+            handToSwing = Hand.MAIN_HAND;
+        } else {
+            // 反向旋转（逆时针）使用副手挥手
+            handToSwing = Hand.OFF_HAND;
+        }
+
+        // 执行挥手动画
+        // 发送挥手包到服务器确保其他玩家也能看到
+        BaritoneUtil.swingHand(handToSwing, BaritoneUtil.SwingSide.All);
     }
 
     /**

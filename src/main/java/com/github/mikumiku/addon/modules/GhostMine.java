@@ -1,6 +1,9 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.ItemUtil;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -145,7 +148,7 @@ public class GhostMine extends BaseModule {
     );
 
     public GhostMine() {
-        super("极速挖掘", "使用发包快速挖掘方块");
+        super("发包挖掘", "使用发包快速挖掘方块");
     }
 
     @Override
@@ -227,11 +230,11 @@ public class GhostMine extends BaseModule {
                 && rebreak.get()
                 && rebreakTicks >= (rebreakDelay.get() * 4)) {
                 int slot = getBestTool(mc.world.getBlockState(rebreakBlockDate.pos));
-                if (slot != -1 && slot != mc.player.getInventory().selectedSlot && swapModeSetting.get() == SwapMode.SILENT) {
+                if (slot != -1 && slot != DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()) && swapModeSetting.get() == SwapMode.SILENT) {
                     InvUtils.swap(slot, true);
                 }
 
-                if (slot != -1 && slot != mc.player.getInventory().selectedSlot && swapModeSetting.get() == SwapMode.NORMAL) {
+                if (slot != -1 && slot != DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()) && swapModeSetting.get() == SwapMode.NORMAL) {
                     InvUtils.swap(slot, false);
                 }
 
@@ -321,9 +324,9 @@ public class GhostMine extends BaseModule {
                     }
 
                     if (firstSlot != -1 && secondSlot != -1 && firstSlot != secondSlot) {
-                        if (mc.player.getInventory().getStack(firstSlot).getItem() instanceof PickaxeItem) {
+                        if (DV.of(ItemUtil.class).isPickaxeItem(mc.player.getInventory().getStack(firstSlot).getItem())) {
                             InvUtils.swap(firstSlot, false);
-                        } else if (mc.player.getInventory().getStack(secondSlot).getItem() instanceof PickaxeItem) {
+                        } else if (DV.of(ItemUtil.class).isPickaxeItem(mc.player.getInventory().getStack(secondSlot).getItem())) {
                             InvUtils.swap(secondSlot, false);
                         }
                     }
@@ -366,11 +369,11 @@ public class GhostMine extends BaseModule {
                 && rebreak.get()
                 && rebreakTicks >= (rebreakDelay.get() * 4)) {
                 int slotx = getBestTool(mc.world.getBlockState(rebreakBlockDate.pos));
-                if (slotx != -1 && slotx != mc.player.getInventory().selectedSlot && swapModeSetting.get() == SwapMode.SILENT) {
+                if (slotx != -1 && slotx != DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()) && swapModeSetting.get() == SwapMode.SILENT) {
                     InvUtils.swap(slotx, true);
                 }
 
-                if (slotx != -1 && slotx != mc.player.getInventory().selectedSlot && swapModeSetting.get() == SwapMode.NORMAL) {
+                if (slotx != -1 && slotx != DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory()) && swapModeSetting.get() == SwapMode.NORMAL) {
                     InvUtils.swap(slotx, false);
                 }
 
@@ -444,7 +447,7 @@ public class GhostMine extends BaseModule {
         Direction direction = event.direction;
         if (!unbreakableBlocks.contains(mc.world.getBlockState(pos).getBlock())
             && !breakBlocks.contains(pos)
-            && !(pos.toCenterPos().distanceTo(mc.player.getPos()) > range.get().intValue())) {
+            && !(pos.toCenterPos().distanceTo(DV.of(PlayerUtil.class).getEntityPos(mc.player)) > range.get().intValue())) {
             if ((firstBlockDate == null || !pos.equals(firstBlockDate.pos)) && (secondBlockDate == null || !pos.equals(secondBlockDate.pos))) {
                 if (firstBlockDate != null && !pos.equals(firstBlockDate.pos) && doubleBreak.get()) {
                     if (secondBlockDate == null || !pos.equals(secondBlockDate.pos)) {
@@ -617,7 +620,7 @@ public class GhostMine extends BaseModule {
         }
 
         Item item = mc.player.getInventory().getStack(bestSlot).getItem();
-        return !(item instanceof PickaxeItem) && !(item instanceof AxeItem) && !(item instanceof ShovelItem) && !(item instanceof SwordItem) ? -1 : bestSlot;
+        return DV.of(ItemUtil.class).isToolOrWeapon(item) ? -1 : bestSlot;
     }
 
     public BlockDate getBlockDate(BlockPos pos, Direction direction) {
@@ -669,13 +672,13 @@ public class GhostMine extends BaseModule {
 
 
             Item item = MinecraftClient.getInstance().player.getInventory().getStack(bestSlot).getItem();
-            if (!(item instanceof PickaxeItem) && !(item instanceof AxeItem) && !(item instanceof ShovelItem) && !(item instanceof SwordItem)) {
+            if (!DV.of(ItemUtil.class).isToolOrWeapon(item)) {
                 bestSlot = -1;
             }
 
             if (progress <= 1.0 * GhostMine.this.speed.get()) {
                 progress = progress
-                    + BlockUtils.getBreakDelta(bestSlot != -1 ? bestSlot : MinecraftClient.getInstance().player.getInventory().selectedSlot, blockState);
+                    + BlockUtils.getBreakDelta(bestSlot != -1 ? bestSlot : DV.of(PlayerUtil.class).getSelectedSlot(MinecraftClient.getInstance().player.getInventory()), blockState);
             } else {
                 if (bestSlot != -1 && swapModeSetting.get() == SwapMode.NORMAL) {
                     InvUtils.swap(bestSlot, false);

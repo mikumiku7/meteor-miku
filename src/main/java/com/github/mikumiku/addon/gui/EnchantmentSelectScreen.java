@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.gui;
 
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.modules.VillagerRoller;
 import com.github.mikumiku.addon.util.VUtil;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -71,7 +72,7 @@ public class EnchantmentSelectScreen extends WindowScreen {
         if (mc.world == null) {
             return;
         }
-        Registry<Enchantment> reg = VUtil.getEnchantmentRegistry();
+        Registry<Enchantment> reg = DV.of(VUtil.class).getEnchantmentRegistry();
         List<RegistryEntry<Enchantment>> available = new ArrayList<>();
         if (this.onlyTradeable) {
             var l = reg.iterateEntries(EnchantmentTags.TRADEABLE);

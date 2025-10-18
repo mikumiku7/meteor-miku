@@ -1,6 +1,7 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.BagUtil;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import com.github.mikumiku.addon.util.VUtil;
@@ -144,7 +145,7 @@ public class AutoWither extends BaseModule {
 
             // 注册
             BlockIterator.register(horizontalRadius.get(), verticalRadius.get(), (blockPos, blockState) -> {
-                Direction dir = VUtil.getOppositeDirectionTo(blockPos);
+                Direction dir = DV.of(VUtil.class).getOppositeDirectionTo(blockPos);
                 if (isValidSpawn(blockPos, dir)) withers.add(witherPool.get().set(blockPos, dir));
             });
         }

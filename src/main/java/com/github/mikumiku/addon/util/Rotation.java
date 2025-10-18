@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.util;
 
+import com.github.mikumiku.addon.dynamic.DV;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -18,7 +19,7 @@ public class Rotation {
     public Rotation(Vec3d vec3d) {
         MinecraftClient mc = MinecraftClient.getInstance();
 
-        float[] angle = this.getRotation(mc.player.getPos().add(0.0, mc.player.getEyeHeight(mc.player.getPose()), 0.0), vec3d);
+        float[] angle = this.getRotation(DV.of(PlayerUtil.class).getEntityPos(mc.player).add(0.0, mc.player.getEyeHeight(mc.player.getPose()), 0.0), vec3d);
         this.yaw = angle[0];
         this.pitch = angle[1];
     }

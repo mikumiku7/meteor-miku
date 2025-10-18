@@ -1,9 +1,11 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.util.BagUtil;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import com.github.mikumiku.addon.util.MikuDamageUtils;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -322,7 +324,7 @@ public class AnchorAuraPlus extends BaseModule {
 
     private boolean inRangeToTargets(BlockPos pos) {
         for (PlayerEntity target : targets) {
-            if (target.getPos().add(0, 1, 0).distanceTo(Vec3d.ofCenter(pos)) < 3.5) return true;
+            if (DV.of(PlayerUtil.class).getEntityPos(target).add(0, 1, 0).distanceTo(Vec3d.ofCenter(pos)) < 3.5) return true;
         }
         return false;
     }

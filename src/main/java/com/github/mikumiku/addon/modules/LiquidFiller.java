@@ -1,17 +1,13 @@
 package com.github.mikumiku.addon.modules;
 
-import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.util.BagUtil;
 import com.github.mikumiku.addon.util.BaritoneUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.world.BlockIterator;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -28,7 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class LiquidFiller extends Module {
+public class LiquidFiller extends BaseModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgWhitelist = settings.createGroup("白名单");
 
@@ -92,15 +88,7 @@ public class LiquidFiller extends Module {
         .build()
     );
 
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-        .name("自动转向")
-        .description("自动转向目标填充位置。")
-        .defaultValue(true)
-        .build()
-    );
-
     // 白名单和黑名单
-
     private final Setting<ListMode> listMode = sgWhitelist.add(new EnumSetting.Builder<ListMode>()
         .name("列表模式")
         .description("选择模式。")
@@ -137,11 +125,12 @@ public class LiquidFiller extends Module {
     private int timer;
 
     public LiquidFiller() {
-        super(MikuMikuAddon.CATEGORY, "自动填水填海", "自动将方块放置在您范围内的水源方块内。");
+        super("自动填水填海", "自动将方块放置在您范围内的水源方块内。");
     }
 
     @Override
     public void onActivate() {
+        super.onActivate();
         timer = 0;
         failedCache.clear();
     }
@@ -162,13 +151,13 @@ public class LiquidFiller extends Module {
         double pZ = mc.player.getZ();
 
         // 查找包含方块的槽位
-        FindItemResult item;
+        int itemSlot = -1;
         if (listMode.get() == ListMode.Whitelist) {
-            item = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && whitelist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
+            itemSlot = BagUtil.findItemInventorySlot(itemStack -> itemStack.getItem() instanceof BlockItem && whitelist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
         } else {
-            item = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && !blacklist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
+            itemSlot = BagUtil.findItemInventorySlot(itemStack -> itemStack.getItem() instanceof BlockItem && !blacklist.get().contains(Block.getBlockFromItem(itemStack.getItem())));
         }
-        if (!item.found()) return;
+        if (itemSlot == -1) return;
 
         long now = System.currentTimeMillis();
 
@@ -192,12 +181,13 @@ public class LiquidFiller extends Module {
                 return;
 
             // 检查玩家是否可以在该位置放置方块
-            if (!BlockUtils.canPlace(blockPos)) return;
+            if (!BaritoneUtil.canPlace(blockPos)) return;
 
             // 添加方块
             blocks.add(blockPos.mutableCopy());
         });
 
+        int finalItemSlot = itemSlot;
         BlockIterator.after(() -> {
             // 排序方块
             if (sortMode.get() == SortMode.TopDown || sortMode.get() == SortMode.BottomUp)
@@ -219,9 +209,9 @@ public class LiquidFiller extends Module {
                 }
 
 
-                BagUtil.doSwap(item.slot());
-                BaritoneUtil.placeBlock(pos, true, true, true);
-                BagUtil.doSwap(item.slot());
+                BagUtil.doSwap(finalItemSlot);
+                BaritoneUtil.placeBlock(pos);
+                BagUtil.doSwap(finalItemSlot);
 
                 failedCache.put(pos, System.currentTimeMillis());
 

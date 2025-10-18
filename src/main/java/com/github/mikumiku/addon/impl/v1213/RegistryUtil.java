@@ -1,53 +1,31 @@
-package com.github.mikumiku.addon.v1214;
+package com.github.mikumiku.addon.impl.v1213;
 
-import com.github.mikumiku.addon.mixin.CountPlacementModifierAccessor;
-import com.github.mikumiku.addon.mixin.HeightRangePlacementModifierAccessor;
-import com.github.mikumiku.addon.mixin.RarityFilterPlacementModifierAccessor;
-import meteordevelopment.meteorclient.settings.BoolSetting;
+import com.github.mikumiku.addon.util.Ore;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.Dimension;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.BuiltinRegistries;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.util.math.intprovider.ConstantIntProvider;
-import net.minecraft.util.math.intprovider.IntProvider;
-import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.WorldPresets;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.minecraft.world.gen.feature.*;
+import net.minecraft.world.gen.feature.OrePlacedFeatures;
+import net.minecraft.world.gen.feature.PlacedFeature;
 import net.minecraft.world.gen.feature.util.PlacedFeatureIndexer;
-import net.minecraft.world.gen.heightprovider.HeightProvider;
-import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
-import net.minecraft.world.gen.placementmodifier.HeightRangePlacementModifier;
-import net.minecraft.world.gen.placementmodifier.PlacementModifier;
-import net.minecraft.world.gen.placementmodifier.RarityFilterPlacementModifier;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-
-public class Ore {
-
-    private static final Setting<Boolean> coal = new BoolSetting.Builder().name("煤炭").build();
-    private static final Setting<Boolean> iron = new BoolSetting.Builder().name("铁").build();
-    private static final Setting<Boolean> gold = new BoolSetting.Builder().name("金").build();
-    private static final Setting<Boolean> redstone = new BoolSetting.Builder().name("红石").build();
-    private static final Setting<Boolean> diamond = new BoolSetting.Builder().name("钻石").build();
-    private static final Setting<Boolean> lapis = new BoolSetting.Builder().name("青金石").build();
-    private static final Setting<Boolean> copper = new BoolSetting.Builder().name("铜").build();
-    private static final Setting<Boolean> emerald = new BoolSetting.Builder().name("绿宝石").build();
-    private static final Setting<Boolean> quartz = new BoolSetting.Builder().name("石英").build();
-    private static final Setting<Boolean> debris = new BoolSetting.Builder().name("远古残骸").build();
-    public static final List<Setting<Boolean>> oreSettings = new ArrayList<>(Arrays.asList(coal, iron, gold, redstone, diamond, lapis, copper, emerald, quartz, debris));
-
-    public static Map<RegistryKey<Biome>, List<Ore>> getRegistry(Dimension dimension) {
+public class RegistryUtil implements com.github.mikumiku.addon.util.RegistryUtil {
+    @Override
+    public Map<RegistryKey<Biome>, List<Ore>> getRegistry(Dimension dimension) {
 
         RegistryWrapper.WrapperLookup registry = BuiltinRegistries.createWrapperLookup();
         RegistryWrapper.Impl<PlacedFeature> features = registry.getOrThrow(RegistryKeys.PLACED_FEATURE);
@@ -110,7 +88,7 @@ public class Ore {
         return biomeOreMap;
     }
 
-    private static void registerOre(
+    private void registerOre(
         Map<PlacedFeature, Ore> map,
         List<PlacedFeatureIndexer.IndexedFeatures> indexer,
         RegistryWrapper.Impl<PlacedFeature> oreRegistry,
@@ -121,58 +99,9 @@ public class Ore {
         ChunkGenerator generator
     ) {
         var orePlacement = oreRegistry.getOrThrow(oreKey).value();
-
         int index = indexer.get(genStep).indexMapping().applyAsInt(orePlacement);
-
         Ore ore = new Ore(orePlacement, genStep, index, active, color, generator);
-
         map.put(orePlacement, ore);
     }
 
-    public int step;
-    public int index;
-    public Setting<Boolean> active;
-    public IntProvider count = ConstantIntProvider.create(1);
-    public HeightProvider heightProvider;
-    public HeightContext heightContext;
-    public float rarity = 1;
-    public float discardOnAirChance;
-    public int size;
-    public Color color;
-    public boolean scattered;
-
-    private Ore(PlacedFeature feature, int step, int index, Setting<Boolean> active, Color color, ChunkGenerator generator) {
-        this.step = step;
-        this.index = index;
-        this.active = active;
-        this.color = color;
-        int bottom = MinecraftClient.getInstance().world.getBottomY();
-        int height = MinecraftClient.getInstance().world.getDimension().logicalHeight();
-        this.heightContext = new HeightContext(null, HeightLimitView.create(bottom, height));
-
-        for (PlacementModifier modifier : feature.placementModifiers()) {
-            if (modifier instanceof CountPlacementModifier) {
-                this.count = ((CountPlacementModifierAccessor) modifier).getCount();
-
-            } else if (modifier instanceof HeightRangePlacementModifier) {
-                this.heightProvider = ((HeightRangePlacementModifierAccessor) modifier).getHeight();
-
-            } else if (modifier instanceof RarityFilterPlacementModifier) {
-                this.rarity = ((RarityFilterPlacementModifierAccessor) modifier).getChance();
-            }
-        }
-
-        FeatureConfig featureConfig = feature.feature().value().config();
-
-        if (featureConfig instanceof OreFeatureConfig oreFeatureConfig) {
-            this.discardOnAirChance = oreFeatureConfig.discardOnAirChance;
-            this.size = oreFeatureConfig.size;
-        } else {
-            throw new IllegalStateException("config for " + feature + "is not OreFeatureConfig.class");
-        }
-
-        if (feature.feature().value().feature() instanceof ScatteredOreFeature) {
-            this.scattered = true;
-        }
-    }
 }

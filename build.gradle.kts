@@ -1,43 +1,24 @@
+import java.util.*
+
 plugins {
-    id("fabric-loom") version "1.10-SNAPSHOT"
+    id("fabric-loom") version "1.11-SNAPSHOT"
     id("io.freefair.lombok") version "8.14"
 }
 
-// 定义版本配置
-val versions = mapOf(
-    "1.21.1" to mapOf(
-        "minecraft" to "1.21.1",
-        "yarn" to "1.21.1+build.3",
-        "meteor" to "0.5.8-SNAPSHOT",
-        "loader" to "0.16.5",
-        "xaeroplus_version" to "2.27.2+fabric-1.21.1",
-        "xaeros_worldmap_version" to "1.39.12_Fabric_1.21",
-        "xaeros_minimap_version" to "25.2.10_Fabric_1.21"
-    ),
-    "1.21.4" to mapOf(
-        "minecraft" to "1.21.4",
-        "yarn" to "1.21.4+build.1",
-        "meteor" to "1.21.4-SNAPSHOT",
-        "loader" to "0.16.5",
-        "xaeroplus_version" to "2.27.2+fabric-1.21.4",
-        "xaeros_worldmap_version" to "1.39.12_Fabric_1.21.4",
-        "xaeros_minimap_version" to "25.2.10_Fabric_1.21.4"
-    )
-)
-
+val versionsDir = rootProject.file("versions")
+val versions = versionsDir.list().map { name -> name.replace(".properties", "") }
+println("all version => $versions")
 // 获取当前构建的版本（从命令行参数或默认值）
 val currentMcVersion =
     project.findProperty("minecraft_version")?.toString() ?: properties["minecraft_version"].toString()
-val currentVersionConfig = versions[currentMcVersion] ?: versions["1.21.1"]!!
 
-// 动态设置版本相关的属性
-val dynamicMinecraftVersion = currentVersionConfig["minecraft"]!!
-val dynamicYarnMappings = currentVersionConfig["yarn"]!!
-val dynamicMeteorVersion = currentVersionConfig["meteor"]!!
-val dynamicLoaderVersion = currentVersionConfig["loader"]!!
-val xaeroplus_version = currentVersionConfig["xaeroplus_version"]!!
-val xaeros_worldmap_version = currentVersionConfig["xaeros_worldmap_version"]!!
-val xaeros_minimap_version = currentVersionConfig["xaeros_minimap_version"]!!
+println("load properties to => ${currentMcVersion}.properties")
+val prop = Properties().apply {
+    val file = rootProject.file("versions/${currentMcVersion}.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
+}
 
 base {
     archivesName = "${properties["archives_base_name"] as String}-$currentMcVersion"
@@ -73,6 +54,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
     maven { url = uri("https://masa.dy.fi/maven") }
     maven { url = uri("https://maven.terraformersmc.com/releases/") }
+    maven { url = uri("https://maven.fallenbreath.me/releases") }
 
 }
 
@@ -80,25 +62,25 @@ repositories {
 val extraLibs: Configuration by configurations.creating
 
 dependencies {
-    minecraft("com.mojang:minecraft:$dynamicMinecraftVersion")
-    mappings("net.fabricmc:yarn:$dynamicYarnMappings:v2")
-    modImplementation("net.fabricmc:fabric-loader:$dynamicLoaderVersion")
+    minecraft("com.mojang:minecraft:${currentMcVersion}")
+    mappings("net.fabricmc:yarn:${prop.getProperty("yarn_mappings")}:v2")
+    modImplementation("net.fabricmc:fabric-loader:${prop.getProperty("loader_version")}")
 
     // 使用配置中定义的meteor版本
-    modImplementation("meteordevelopment:meteor-client:$dynamicMeteorVersion")
+    modImplementation("meteordevelopment:meteor-client:${prop.getProperty("meteor_version")}")
 
     // XaeroPlus https://modrinth.com/mod/xaeroplus/version/2.27.2+fabric-1.21.1
-    modImplementation("maven.modrinth:xaeroplus:${xaeroplus_version}")
+    modImplementation("maven.modrinth:xaeroplus:${prop.getProperty("xaeroplus_version")}")
     // XaeroWorldMap https://modrinth.com/mod/xaeros-world-map/version/1.39.12_Fabric_1.21
     //               https://modrinth.com/mod/xaeros-world-map/version/1.39.12_Fabric_1.21.4
-    modImplementation("maven.modrinth:xaeros-world-map:${xaeros_worldmap_version}")
+    modImplementation("maven.modrinth:xaeros-world-map:${prop.getProperty("xaeros_worldmap_version")}")
     // XaeroMinimap https://modrinth.com/mod/xaeros-minimap/version/25.2.10_Fabric_1.21
-    modImplementation("maven.modrinth:xaeros-minimap:${xaeros_minimap_version}")
-    modImplementation("maven.modrinth:litematica:0.19.59")
-    modCompileOnly("meteordevelopment:baritone:$dynamicMinecraftVersion-SNAPSHOT")
+    modImplementation("maven.modrinth:xaeros-minimap:${prop.getProperty("xaeros_minimap_version")}")
+//    modImplementation("maven.modrinth:litematica:${prop.getProperty("litematica_version")}")
+    modCompileOnly("meteordevelopment:baritone:${prop.getProperty("baritone_version")}")
 
-    modImplementation("com.github.sakura-ryoko:malilib:1.21-0.21.9")
-    modImplementation("com.github.sakura-ryoko:litematica:1.21-0.19.59")
+    modImplementation("com.github.sakura-ryoko:malilib:${prop.getProperty("malilib_version")}")
+    modImplementation("com.github.sakura-ryoko:litematica:${prop.getProperty("litematica_version")}")
 
     extraLibs("dev.duti.acheong:cubiomes:1.22.5") { isTransitive = false }
     extraLibs("dev.duti.acheong:cubiomes:1.22.5:linux64") { isTransitive = false }
@@ -118,7 +100,7 @@ dependencies {
 }
 
 // 为每个版本创建构建任务
-versions.forEach { (versionName, config) ->
+versions.forEach { versionName ->
     val taskName = "buildFor${versionName.replace(".", "")}"
 
     tasks.register(taskName, Exec::class) {
@@ -174,57 +156,54 @@ tasks.register("buildAll") {
     group = "build"
     description = "Build jars for all Minecraft versions"
 
-    dependsOn(versions.keys.map { "buildFor${it.replace(".", "")}" })
+    dependsOn(versions.map { "buildFor${it.replace(".", "")}" })
 }
 
 tasks.withType<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// 在编译前生成版本特定类
-tasks.register("prepareVersionSpecificSources") {
-    doLast {
-        val utilDir = file("src/main/java/com/github/mikumiku/addon/util")
-        utilDir.mkdirs()
-
-        val sourceDir = when (currentMcVersion) {
-            "1.21.1" -> file("src/main/java/com/github/mikumiku/addon/v1211")
-            "1.21.4" -> file("src/main/java/com/github/mikumiku/addon/v1214")
-            else -> throw GradleException("不支持的版本: $currentMcVersion")
-        }
-
-        if (sourceDir.exists() && sourceDir.isDirectory) {
-            // 递归复制所有文件
-            sourceDir.walkTopDown().forEach { sourceFile ->
-                if (sourceFile.isFile && sourceFile.extension == "java") {
-                    // 计算相对路径以保持目录结构
-                    val relativePath = sourceFile.relativeTo(sourceDir)
-                    val targetFile = File(utilDir, relativePath.path)
-
-                    // 确保目标目录存在
-                    targetFile.parentFile.mkdirs()
-
-                    // 读取源文件内容并处理package声明
-                    val content = sourceFile.readText()
-                        .replace("package com.github.mikumiku.addon.v1211;", "package com.github.mikumiku.addon.util;")
-                        .replace("package com.github.mikumiku.addon.v1214;", "package com.github.mikumiku.addon.util;")
-
-                    targetFile.writeText(content)
-                    println("已复制并处理版本特定文件: ${sourceFile.name} -> ${targetFile.absolutePath}")
-                }
-            }
-        } else {
-            throw GradleException("版本特定源目录不存在: ${sourceDir.absolutePath}")
-        }
-    }
-}
-
 sourceSets {
     main {
         java {
-            // 排除原始的版本特定文件
-            exclude("**/v1211/**")
-            exclude("**/v1214/**")
+            val currentVersion = currentMcVersion.replace(".", "").toInt()
+            val implDir = File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/impl")
+            println("all implDirs => ${implDir.list().contentToString()}")
+            val verMap = mutableMapOf<String, MutableList<Int>>()
+            val verFileMap = mutableMapOf<String, String>()
+            for (vPath in implDir.listFiles()) {
+                if (vPath.exists() && vPath.isDirectory) {
+                    val versionNumber = vPath.name.replace("v", "").toInt()
+                    vPath.walkTopDown().forEach { javaFile ->
+                        if (javaFile.isFile && javaFile.extension == "java") {
+                            var vs = verMap[javaFile.name]
+                            if (vs == null) {
+                                vs = mutableListOf()
+                                verMap[javaFile.name] = vs
+                            }
+                            vs.add(versionNumber)
+                            verFileMap[javaFile.name + versionNumber] = javaFile.path
+                        }
+                    }
+                }
+            }
+
+            // 选择最佳版本，其他版本排除
+            verMap.forEach { (name, vs) ->
+                var useVer: Int = -1
+                vs.sortByDescending { it -> it }
+                vs.forEach { ver ->
+                    if (useVer == -1 && ver <= currentVersion) {
+                        useVer = ver
+                    } else {
+                        var fullJavaPath = verFileMap[name + ver]
+                        fullJavaPath = fullJavaPath?.substring(fullJavaPath.indexOf("\\src\\main\\java\\") + 15, fullJavaPath.length)
+                        fullJavaPath = fullJavaPath?.replace("\\", "/")
+                        exclude(fullJavaPath)
+                        println("exclude => $fullJavaPath")
+                    }
+                }
+            }
         }
     }
 }
@@ -234,25 +213,23 @@ sourceSets {
 tasks {
     processResources {
 
-        val versionConstantsFile =
-            File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/VersionConstants.java")
-        versionConstantsFile.parentFile.mkdirs()
-        versionConstantsFile.writeText(
-            """
-package com.github.mikumiku.addon;
-
-public final class VersionConstants {
-    public static final String MINECRAFT_VERSION = "$currentMcVersion";
-    public static final boolean IS_1_21_1 = "1.21.1".equals(MINECRAFT_VERSION);
-    public static final boolean IS_1_21_4 = "1.21.4".equals(MINECRAFT_VERSION);
-}
-    """.trimIndent()
-        )
+//        val versionConstantsFile =
+//            File(sourceSets.main.get().java.srcDirs.first(), "com/github/mikumiku/addon/VersionConstants.java")
+//        versionConstantsFile.parentFile.mkdirs()
+//        versionConstantsFile.writeText(
+//            """
+//package com.github.mikumiku.addon;
+//
+//public final class VersionConstants {
+//    public static final String MINECRAFT_VERSION = "$currentMcVersion";
+//}
+//    """.trimIndent()
+//        )
 
 
         val propertyMap = mapOf(
             "version" to version,
-            "mc_version" to currentMcVersion,
+            "mc_version" to prop.getProperty("minecraft_dependency"),
         )
 
         inputs.properties(propertyMap)
@@ -282,8 +259,6 @@ public final class VersionConstants {
     withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.release = 21
-
-        dependsOn("prepareVersionSpecificSources")
 
     }
 }

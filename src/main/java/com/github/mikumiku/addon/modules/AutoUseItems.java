@@ -1,7 +1,10 @@
 package com.github.mikumiku.addon.modules;
 
 import baritone.api.BaritoneAPI;
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -23,7 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AutoUseItems extends Module {
+public class AutoUseItems extends BaseModule {
     @SuppressWarnings("unchecked")
     private static final Class<? extends Module>[] AURAS = new Class[]{KillAura.class, CrystalAura.class, AnchorAura.class, BedAura.class};
 
@@ -163,6 +166,7 @@ public class AutoUseItems extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         useTimer = 0;
         timedTimer = 0;
         isUsing = false;
@@ -255,7 +259,7 @@ public class AutoUseItems extends Module {
         FindItemResult result = InvUtils.findInHotbar(item);
         if (!result.found()) return;
 
-        prevSlot = mc.player.getInventory().selectedSlot;
+        prevSlot = DV.of(PlayerUtil.class).getSelectedSlot(mc.player.getInventory());
         InvUtils.swap(result.slot(), false);
 
         // 暂停光环和Baritone

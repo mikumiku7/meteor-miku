@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.util;
 
+import com.github.mikumiku.addon.dynamic.DV;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.client.MinecraftClient;
@@ -106,12 +107,12 @@ public class RotationManager {
             mc.player
                 .networkHandler
                 .sendPacket(
-                    VUtil.getFull(
+                    DV.of(VUtil.class).getFull(
                         mc.player.getX(),
                         mc.player.getY(),
                         mc.player.getZ(),
-                        mc.player.getYaw(),
-                        mc.player.getPitch(),
+                        rotation.getYaw(),
+                        rotation.getPitch(),
                         mc.player.isOnGround()
                     )
                 );
@@ -151,7 +152,7 @@ public class RotationManager {
         mc.player
             .networkHandler
             .sendPacket(
-                VUtil.getFull(
+                DV.of(VUtil.class).getFull(
                     mc.player.getX(),
                     mc.player.getY(),
                     mc.player.getZ(),

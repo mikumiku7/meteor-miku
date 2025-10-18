@@ -1,9 +1,13 @@
 package com.github.mikumiku.addon.modules;
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
+import com.github.mikumiku.addon.dynamic.DV;
 import com.github.mikumiku.addon.gui.EnchantmentSelectScreen;
+import com.github.mikumiku.addon.util.NbtUtil;
 import com.github.mikumiku.addon.util.VUtil;
 import com.github.mikumiku.addon.util.VillagerRollerFileUtils;
+import com.github.mikumiku.addon.util.VillagerUtil;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
 import meteordevelopment.meteorclient.MeteorClient;
@@ -84,7 +88,7 @@ import java.util.*;
  * <p>
  * "repo": "https://github.com/maxsupermanhd/meteor-villager-roller"
  */
-public class VillagerRoller extends Module {
+public class VillagerRoller extends BaseModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSound = settings.createGroup("声音");
     private final SettingGroup sgChatFeedback = settings.createGroup("聊天反馈", false);
@@ -311,6 +315,7 @@ public class VillagerRoller extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         if (toggleOnBindRelease) {
             toggleOnBindRelease = false;
             if (cfSetup.get()) {
@@ -351,7 +356,7 @@ public class VillagerRoller extends Module {
         super.fromTag(tag);
         if (saveListToConfig.get()) {
 //            NbtList l = tag.getListOrEmpty("rolling");
-            NbtList l = tag.getList("rolling", NbtElement.COMPOUND_TYPE);
+            NbtList l = DV.of(NbtUtil.class).getRollingList(tag, NbtElement.COMPOUND_TYPE);
             searchingEnchants.clear();
             for (NbtElement e : l) {
                 if (e.getType() != NbtElement.COMPOUND_TYPE) {
@@ -456,7 +461,7 @@ public class VillagerRoller extends Module {
             ItemStack book = Items.ENCHANTED_BOOK.getDefaultStack();
             int maxlevel = 255;
             if (en.isPresent()) {
-                book = VUtil.getEnchantedBookWith(en);
+                book = DV.of(VUtil.class).getEnchantedBookWith(en);
                 maxlevel = en.get().value().getMaxLevel();
             }
             table.add(theme.item(book));
@@ -698,7 +703,7 @@ public class VillagerRoller extends Module {
 
             for (Pair<RegistryEntry<Enchantment>, Integer> enchant : getEnchants(sellItem)) {
                 int enchantLevel = enchant.right();
-                var reg = VUtil.getEnchantmentRegistry();
+                var reg = DV.of(VUtil.class).getEnchantmentRegistry();
 
                 String enchantIdString = reg.getId(enchant.key().value()).toString();
                 String enchantName = Names.get(enchant.key());
@@ -711,21 +716,21 @@ public class VillagerRoller extends Module {
                         int ml = enchant.key().value().getMaxLevel();
                         if (enchantLevel < ml) {
                             if (cfLowerLevel.get()) {
-                                info(String.format("找到附魔 %s 但不是最高等级：%d（最高）> %d（找到）",
-                                    enchantName, ml, enchantLevel));
+                                info(String.format("找到附魔 %s 但不是最高等级：%d（找到）< %d（最高）",
+                                    enchantName, enchantLevel, ml));
                             }
                             continue;
                         }
                     } else if (e.minLevel > enchantLevel) {
                         if (cfLowerLevel.get()) {
-                            info(String.format("找到附魔 %s 但等级太低：%d（要求等级）> %d（刷到等级）",
-                                enchantName, e.minLevel, enchantLevel));
+                            info(String.format("找到附魔 %s 但等级太低：%d（刷到等级）< %d（要求等级）",
+                                enchantName, enchantLevel, e.minLevel));
                         }
                         continue;
                     }
                     if (e.maxCost > 0 && offer.getOriginalFirstBuyItem().getCount() > e.maxCost) {
                         if (cfTooExpensive.get()) {
-                            info(String.format("找到附魔 %s 但价格太高：%s（最高价格）< %d（成本）",
+                            info(String.format("找到附魔 %s 但价格太高：%s（价格）> %d（最优价格）",
                                 enchantName, e.maxCost, offer.getOriginalFirstBuyItem().getCount()));
                         }
                         continue;
@@ -736,6 +741,7 @@ public class VillagerRoller extends Module {
                         mc.getSoundManager().play(PositionedSoundInstance.master(sound.get().get(0),
                             soundPitch.get().floatValue(), soundVolume.get().floatValue()));
                     }
+                    info(String.format("找到了"));
                     if (disconnectIfFound.get()) {
                         String levelText = (enchantLevel > 1 || enchant.key().value().getMaxLevel() > 1) ? " " + enchantLevel : "";
                         String message = String.format(
@@ -774,7 +780,7 @@ public class VillagerRoller extends Module {
         rollingVillager = villager;
         currentState = State.ROLLING_BREAKING_BLOCK;
         if (cfSetup.get()) {
-            info("已获取你的村民");
+            info("OK 开刷");
         }
         event.cancel();
     }
@@ -827,7 +833,7 @@ public class VillagerRoller extends Module {
                     currentState = State.ROLLING_BREAKING_BLOCK;
                     return;
                 }
-                if (rollingVillager.getVillagerData().getProfession() == VillagerProfession.NONE) {
+                if (DV.of(VillagerUtil.class).isNoneProfession(rollingVillager.getVillagerData())) {
                     // info("Profession cleared");
                     currentState = State.ROLLING_PLACING_BLOCK;
                 }
@@ -879,7 +885,7 @@ public class VillagerRoller extends Module {
                     currentState = State.ROLLING_BREAKING_BLOCK;
                     return;
                 }
-                if (rollingVillager.getVillagerData().getProfession() != VillagerProfession.NONE) {
+                if (!DV.of(VillagerUtil.class).isNoneProfession(rollingVillager.getVillagerData())) {
                     currentState = State.ROLLING_WAITING_FOR_VILLAGER_TRADES;
                     triggerInteract();
                 }
@@ -946,10 +952,10 @@ public class VillagerRoller extends Module {
 //            minLevel = tag.getInt("minLevel", 1);
 //            maxCost = tag.getInt("maxCost", 64);
 //            enabled = tag.getBoolean("enabled", true);
-            enchantment = Identifier.tryParse(tag.getString("enchantment"));
-            minLevel = tag.getInt("minLevel");
-            maxCost = tag.getInt("maxCost");
-            enabled = tag.getBoolean("enabled");
+            enchantment = Identifier.tryParse(DV.of(NbtUtil.class).getString(tag, "enchantment"));
+            minLevel = DV.of(NbtUtil.class).getInt(tag, "minLevel");
+            maxCost = DV.of(NbtUtil.class).getInt(tag, "maxCost");
+            enabled = DV.of(NbtUtil.class).getBoolean(tag, "enabled");
             return this;
         }
     }

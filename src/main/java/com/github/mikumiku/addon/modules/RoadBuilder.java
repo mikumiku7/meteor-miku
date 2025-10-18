@@ -26,99 +26,84 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoadBuilder extends BaseModule {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup renderGeneral = settings.createGroup("渲染");
+    SettingGroup sgGeneral = settings.getDefaultGroup();
+    SettingGroup renderGeneral = settings.createGroup("渲染");
 
-    private final Setting<Double> range = sgGeneral
-        .add(
-            new DoubleSetting.Builder()
-                .name("建造范围")
-                .description("自动建造的最大范围")
-                .defaultValue(4)
-                .range(0, 6)
-                .build()
-        );
-    public final Setting<Block> blockType = sgGeneral
-        .add(new BlockSetting.Builder()
+    Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
+            .name("建造范围")
+            .description("自动建造的最大范围")
+            .defaultValue(4)
+            .range(0, 6)
+            .build()
+    );
+    Setting<Block> blockType = sgGeneral.add(new BlockSetting.Builder()
             .name("方块")
             .description("选择用于建造的方块")
             .defaultValue(Blocks.COBBLESTONE)
             .build()
-        );
-
-    private final Setting<SlapType> slapType = sgGeneral.add(new EnumSetting.Builder<SlapType>()
-        .name("半砖方向(如果有)")
-        .description("半砖方向")
-        .defaultValue(SlapType.UP)
-        .visible(() -> blockType.get() instanceof SlabBlock)
-        .build()
     );
 
-    private final Setting<Integer> blocksPer = sgGeneral
-        .add(
-            new IntSetting.Builder()
-                .name("每次放置数量")
-                .description("每个游戏刻放置的方块数量")
-                .defaultValue(1)
-                .sliderRange(1, 6)
-                .build()
-        );
-    private final Setting<Integer> delay = sgGeneral
-        .add(
-            new IntSetting.Builder()
-                .name("放置延迟")
-                .description("放置方块之间的延迟时间（单位：tick）")
-                .defaultValue(0)
-                .sliderRange(0, 20)
-                .build()
-        );
-    private final Setting<Boolean> render = renderGeneral
-        .add(
-            new BoolSetting.Builder()
-                .name("显示渲染")
-                .description("是否显示待放置方块的渲染预览")
-                .defaultValue(true)
-                .build()
-        );
-    private final Setting<ShapeMode> shapeMode = renderGeneral
-        .add(
-            ((EnumSetting.Builder) ((EnumSetting.Builder) ((EnumSetting.Builder) new EnumSetting.Builder()
-                .name("渲染模式"))
-                .description("选择渲染的显示模式"))
-                .defaultValue(ShapeMode.Both))
-                .build()
-        );
-    private final Setting<SettingColor> readySideColor = renderGeneral
-        .add(
-            new ColorSetting.Builder()
-                .name("侧面颜色")
-                .description("待放置方块渲染的侧面填充颜色")
-                .defaultValue(new SettingColor(135, 206, 235, 30))//天空蓝色
-                .build()
-        );
-    private final Setting<SettingColor> readyLineColor = renderGeneral
-        .add(
-            new ColorSetting.Builder()
-                .name("线条颜色")
-                .description("待放置方块渲染的边框线条颜色")
-                .defaultValue(new SettingColor(100, 149, 237, 80)) //矢车菊蓝色
-                .build()
-        );
-    private List<BlockPos> placeList = new ArrayList<>();
-    private int tickCounter = 0;
+    Setting<SlapType> slapType = sgGeneral.add(new EnumSetting.Builder<SlapType>()
+            .name("半砖方向(如果有)")
+            .description("半砖方向")
+            .defaultValue(SlapType.UP)
+            .visible(() -> blockType.get() instanceof SlabBlock)
+            .build()
+    );
+
+    Setting<Integer> blocksPer = sgGeneral.add(new IntSetting.Builder()
+            .name("每次放置数量")
+            .description("每个游戏刻放置的方块数量")
+            .defaultValue(2)
+            .sliderRange(1, 6)
+            .build()
+    );
+    Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+            .name("放置延迟")
+            .description("放置方块之间的延迟时间（单位：tick）")
+            .defaultValue(0)
+            .sliderRange(0, 20)
+            .build()
+    );
+    Setting<Boolean> render = renderGeneral.add(new BoolSetting.Builder()
+            .name("显示渲染")
+            .description("是否显示待放置方块的渲染预览")
+            .defaultValue(true)
+            .build()
+    );
+    Setting<ShapeMode> shapeMode = renderGeneral.add(new EnumSetting.Builder<ShapeMode>()
+            .name("渲染模式")
+            .description("选择渲染的显示模式")
+            .defaultValue(ShapeMode.Both)
+            .build()
+    );
+    Setting<SettingColor> readySideColor = renderGeneral.add(new ColorSetting.Builder()
+            .name("侧面颜色")
+            .description("待放置方块渲染的侧面填充颜色")
+            .defaultValue(new SettingColor(135, 206, 235, 30))//天空蓝色
+            .build()
+    );
+    Setting<SettingColor> readyLineColor = renderGeneral.add(new ColorSetting.Builder()
+            .name("线条颜色")
+            .description("待放置方块渲染的边框线条颜色")
+            .defaultValue(new SettingColor(100, 149, 237, 80)) //矢车菊蓝色
+            .build()
+    );
+
+    List<BlockPos> placeList = new ArrayList<>();
+    int tickCounter = 0;
     int tickBlockCount = 0;
 
     public RoadBuilder() {
         super(
-            "脚下快速搭平台",
-            "自动建造平台或脚下搭路，需要手动放第一块"
+                "脚下快速搭平台",
+                "自动建造平台或脚下搭路，需要手动放第一块"
         );
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
-
     }
 
     @EventHandler
@@ -151,15 +136,15 @@ public class RoadBuilder extends BaseModule {
             if ((blockType.get() instanceof SlabBlock && slapType.get() == SlapType.DOWN)) {
                 Direction direction = BaritoneUtil.getInteractDirection(pos, true);
                 if (BaritoneUtil.canSeeBlockFace(pos, direction)
-                    && mc.world.getBlockState(pos).getBlock().asItem() == Items.AIR
-                    && isAdjacent(pos)
-                    && pos.getY() == mc.player.getBlockPos().getY()) {
+                        && mc.world.getBlockState(pos).getBlock().asItem() == Items.AIR
+                        && isAdjacent(pos)
+                        && pos.getY() == mc.player.getBlockPos().getY()) {
                     tryPlace(pos);
                 }
-            } else if (BaritoneUtil.canPlace(pos, false)
-                && isAdjacent(pos)
-                && pos.getY() == mc.player.getBlockPos().down().getY()
-                && mc.world.getBlockState(pos).getBlock().asItem() == Items.AIR) {
+            } else if (BaritoneUtil.canPlace(pos, true)
+                    && isAdjacent(pos)
+                    && pos.getY() == mc.player.getBlockPos().down().getY()
+                    && mc.world.getBlockState(pos).getBlock().asItem() == Items.AIR) {
                 tryPlace(pos);
             }
         }
@@ -168,8 +153,8 @@ public class RoadBuilder extends BaseModule {
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (render.get()
-            && placeList.size() > 0
-            && (BagUtil.find(blockType.get().asItem()).found())) {
+                && placeList.size() > 0
+                && (BagUtil.find(blockType.get().asItem()).found())) {
             for (int i = 0; i < placeList.size(); i++) {
                 double x1 = placeList.get(i).getX();
                 double y1 = placeList.get(i).getY();
@@ -215,7 +200,7 @@ public class RoadBuilder extends BaseModule {
                 BaritoneUtil.placeDownBlock(pos, true, true, true);
             }
         } else {
-            BaritoneUtil.placeBlock(pos, true, true, true);
+            BaritoneUtil.placeBlock(pos);
         }
 
         BagUtil.doSwap(itemResult);
@@ -243,7 +228,7 @@ public class RoadBuilder extends BaseModule {
                     if (slabTypeSetting == SlapType.UP && neighborSlabType == SlabType.TOP) {
                         return true;
                     } else if (slabTypeSetting == SlapType.DOWN &&
-                        (neighborSlabType == SlabType.BOTTOM || neighborSlabType == SlabType.DOUBLE)) {
+                            (neighborSlabType == SlabType.BOTTOM || neighborSlabType == SlabType.DOUBLE)) {
                         return true;
                     }
                 }

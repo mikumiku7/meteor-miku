@@ -1,6 +1,8 @@
 package com.github.mikumiku.addon.modules;
 
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -301,7 +303,7 @@ public class AutoEz extends BaseModule {
                 Entity entity = packet.getEntity(mc.world);
                 if (pop.get() && mc.player != null && mc.world != null && entity instanceof PlayerEntity) {
                     if (entity != mc.player && !Friends.get().isFriend((PlayerEntity) entity) &&
-                        mc.player.getPos().distanceTo(entity.getPos()) <= range.get()) {
+                        DV.of(PlayerUtil.class).getEntityPos(mc.player).distanceTo(DV.of(PlayerUtil.class).getEntityPos(entity)) <= range.get()) {
                         sendPopMessage(entity.getName().getString());
                     }
                 }
@@ -312,7 +314,7 @@ public class AutoEz extends BaseModule {
     @SuppressWarnings("DataFlowIssue")
     private boolean anyDead(double range) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && pl.getPos().distanceTo(mc.player.getPos()) <= range
+            if (pl != mc.player && !Friends.get().isFriend(pl) && DV.of(PlayerUtil.class).getEntityPos(pl).distanceTo(DV.of(PlayerUtil.class).getEntityPos(mc.player)) <= range
                 && pl.getHealth() <= 0) {
                 name = pl.getName().getString();
                 return true;

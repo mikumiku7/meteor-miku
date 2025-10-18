@@ -1,5 +1,6 @@
 package com.github.mikumiku.addon.modules;
 
+import com.github.mikumiku.addon.BaseModule;
 import com.github.mikumiku.addon.MikuMikuAddon;
 import com.github.mikumiku.addon.util.WaypointUtils;
 import com.github.mikumiku.addon.util.seeds.Seed;
@@ -29,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import static meteordevelopment.meteorclient.utils.world.Dimension.End;
 
 @Slf4j
-public class ElytraFinder extends Module {
+public class ElytraFinder extends BaseModule {
 
     // 设置组
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -113,6 +114,7 @@ public class ElytraFinder extends Module {
 
     @Override
     public void onActivate() {
+        super.onActivate();
         startElytraSearch();
         info("鞘翅搜索模块已启用");
     }

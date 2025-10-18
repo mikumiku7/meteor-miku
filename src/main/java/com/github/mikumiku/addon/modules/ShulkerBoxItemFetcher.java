@@ -4,6 +4,8 @@ import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.utils.BetterBlockPos;
 import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.dynamic.DV;
+import com.github.mikumiku.addon.util.PlayerUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.pathing.NopPathManager;
 import meteordevelopment.meteorclient.pathing.PathManagers;
@@ -102,7 +104,7 @@ public class ShulkerBoxItemFetcher extends BaseModule {
     private boolean hasRotated = false; // Track if we've rotated to look at the shulker box
 
     public ShulkerBoxItemFetcher() {
-        super("盒中取物", "自动从潜影盒中获取指定物品。自动放盒，取物，打盒，捡盒");
+        super("一键补给", "自动从潜影盒中获取指定物品。自动放盒，取物，打盒，捡盒");
         baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
     }
 
@@ -246,7 +248,7 @@ public class ShulkerBoxItemFetcher extends BaseModule {
         }
 
         // Select the shulker box
-        mc.player.getInventory().selectedSlot = shulkerSlot;
+        DV.of(PlayerUtil.class).setSelectedSlot(mc.player.getInventory(), shulkerSlot);
 
         // Look at the placement position
         lookAtBlock(placePos);
@@ -343,8 +345,8 @@ public class ShulkerBoxItemFetcher extends BaseModule {
 
     private boolean isValidPlacePosition(BlockPos pos) {
         return mc.world.getBlockState(pos).isAir() &&
-               BlockUtils.canPlace(pos) &&
-               !mc.world.getBlockState(pos.down()).isAir();
+            BlockUtils.canPlace(pos) &&
+            !mc.world.getBlockState(pos.down()).isAir();
     }
 
     private void moveItemToHotbar(int sourceSlot) {
