@@ -1,0 +1,99 @@
+package com.github.mikumiku.addon.modules;
+
+import com.github.mikumiku.addon.BaseModule;
+import com.github.mikumiku.addon.util.BagUtil;
+import com.github.mikumiku.addon.util.MikuUtil;
+import com.github.mikumiku.addon.util.Via;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
+import net.minecraft.util.Hand;
+
+public class OnekeyFireWork extends BaseModule {
+    private int delay;
+    private int slotBefore;
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Integer> closeDelay = sgGeneral.add(
+        new IntSetting.Builder()
+            .name("关闭延迟")
+            .description("使用烟花后关闭界面的延迟（游戏刻）")
+            .defaultValue(4)
+            .sliderRange(1, 40)
+            .build()
+    );
+
+    public OnekeyFireWork() {
+        super(BaseModule.CATEGORY_MIKU_COMBAT,
+            "一键烟花",
+            "快捷键一键放烟花"
+        );
+
+        this.delay = 0;
+        this.slotBefore = mc.player == null ? 0 : Via.getSelectedSlot();
+
+    }
+
+    @Override
+    public void onActivate() {
+        this.fire();
+//        BagUtil.quickUse(Items.FIREWORK_ROCKET);
+
+        this.delay = this.closeDelay.get();
+        this.slotBefore = mc.player == null ? 0 : Via.getSelectedSlot();
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        if (this.delay == 0) {
+            InvUtils.swap(this.slotBefore, false);
+            this.toggle();
+        } else {
+            this.delay--;
+        }
+    }
+
+
+    public void fire() {
+
+        try {
+            if (!mc.player.isOnGround()) {
+                if (mc.player.getInventory().getStack(38).getItem().equals(Items.ELYTRA)) {
+                    Item item = mc.player.getMainHandStack().getItem();
+                    if (!MikuUtil.isArmor(item)) {
+                        if (item == Items.FIREWORK_ROCKET) {
+                            firework();
+                        } else {
+                            int fireworkSlot;
+                            if ((fireworkSlot = InvUtils.findInHotbar(Items.FIREWORK_ROCKET).slot()) != -1) {
+                                int old = Via.getSelectedSlot();
+                                BagUtil.switchToSlot(fireworkSlot);
+                                firework();
+                                BagUtil.switchToSlot(old);
+
+                                mc.getNetworkHandler().sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                            } else if ((fireworkSlot = InvUtils.find(Items.FIREWORK_ROCKET).slot()) != -1) {
+                                BagUtil.inventorySwap(fireworkSlot, Via.getSelectedSlot());
+                                firework();
+                                BagUtil.inventorySwap(fireworkSlot, Via.getSelectedSlot());
+                                BagUtil.sync();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void firework() {
+        BaseModule.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+    }
+}

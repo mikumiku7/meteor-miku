@@ -1,0 +1,202 @@
+package com.github.mikumiku.addon.v12111;
+
+import com.github.mikumiku.addon.modules.VillagerRoller;
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.events.meteor.KeyEvent;
+import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.input.Input;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.EnchantmentLevelEntry;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.PlayerInput;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.village.VillagerData;
+import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.Heightmap;
+import net.minecraft.world.RaycastContext;
+import net.minecraft.world.World;
+
+import java.util.List;
+import java.util.Optional;
+
+public class Via {
+    public static ItemStack getEnchantedBookWith(Optional<RegistryEntry.Reference<Enchantment>> en) {
+        return EnchantmentHelper.getEnchantedBookWith(new EnchantmentLevelEntry(en.get(), en.get().value().getMaxLevel()));
+    }
+
+    public static Registry<Enchantment> getEnchantmentRegistry() {
+        DynamicRegistryManager registryManager = MinecraftClient.getInstance().world.getRegistryManager();
+        return registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
+    }
+
+
+    public static PlayerMoveC2SPacket.LookAndOnGround get(float currentYaw, float pitch, boolean onGround) {
+        return new PlayerMoveC2SPacket.LookAndOnGround(currentYaw, pitch, onGround, false);
+    }
+
+    public static PlayerMoveC2SPacket.Full getFull(double x, double y, double z, float yaw, float pitch, boolean onGround) {
+        return new PlayerMoveC2SPacket.Full(x, y, z,
+            yaw,
+            pitch,
+            onGround, MeteorClient.mc.player.horizontalCollision
+        );
+    }
+
+    public static PlayerMoveC2SPacket.PositionAndOnGround getPositionAndOnGround(double x, double y, double z, boolean onGround) {
+        return new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z,
+            onGround, MeteorClient.mc.player.horizontalCollision
+        );
+    }
+
+    public static PlayerMoveC2SPacket.OnGroundOnly getOnGroundOnly(boolean onGround) {
+        return new PlayerMoveC2SPacket.OnGroundOnly(
+            onGround, MeteorClient.mc.player.horizontalCollision
+        );
+    }
+
+
+    public static boolean isFallFlying(MinecraftClient mc) {
+        return mc.player.isGliding();
+    }
+
+    public static boolean isJumping(MinecraftClient mc) {
+        return mc.player.input.playerInput.jump();
+    }
+
+    public static boolean isSneaking(MinecraftClient mc) {
+        return mc.player.input.playerInput.sneak();
+
+    }
+
+    public static int getTopY(MinecraftClient mc) {
+        return mc.world.getTopY(Heightmap.Type.WORLD_SURFACE, (int) mc.player.getX(), (int) mc.player.getZ());
+    }
+
+    public static Direction getOppositeDirectionTo(BlockPos blockPos) {
+        Direction dir = Direction.fromHorizontalDegrees(Rotations.getYaw(blockPos)).getOpposite();
+
+        return dir;
+    }
+
+    public static double getToughness(LivingEntity entity) {
+        double value = entity.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
+        return value;
+    }
+
+    public static void setRaycast(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
+        raycastContext.meteor$set(source, vec3d, shapeType, fluidHandling, player);
+    }
+
+    public static void setMovement(IRaycastContext raycastContext, Vec3d source, Vec3d vec3d, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, ClientPlayerEntity player) {
+        raycastContext.meteor$set(source, vec3d, shapeType, fluidHandling, player);
+    }
+
+    public static void setMovement(IVec3d movement, double x, double y, double z) {
+        movement.meteor$set(x, y, z);
+    }
+
+    public static void drawTexture(DrawContext drawContext, Identifier texture2, int i, int i1, int i2, int i3) {
+    }
+
+    public static Vec3d playerKnockback(ExplosionS2CPacket packet) {
+        return packet.playerKnockback().orElse(Vec3d.ZERO);
+    }
+
+    public static int getSelectedSlot() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        return mc.player.getInventory().getSelectedSlot();
+    }
+
+    public static void setSelectedSlot(int selectedSlot) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        mc.player.getInventory().setSelectedSlot(selectedSlot);
+    }
+
+    public static NbtCompound getNbtCompound(NbtCompound tag, String key) {
+        return tag.getCompoundOrEmpty(key);
+    }
+
+    public static NbtList getNbtList(NbtCompound tag, String key) {
+        return tag.getListOrEmpty(key);
+    }
+    public static boolean isNoneProfession(VillagerData data) {
+        return data.profession() == VillagerProfession.NONE;
+    }
+    public static void sendPressShift() {
+        PlayerInput playerInput = new PlayerInput(false, false, false, false, false, true, false);
+        MeteorClient.mc.player.networkHandler.sendPacket(new PlayerInputC2SPacket(playerInput));
+    }
+
+    public static void sendReleaseShift() {
+        PlayerInput playerInput = new PlayerInput(false, false, false, false, false, false, false);
+        MeteorClient.mc.player.networkHandler.sendPacket(new PlayerInputC2SPacket(playerInput));
+    }
+
+
+    public static int getSyncId(InventoryS2CPacket inventoryS2CPacket) {
+        return inventoryS2CPacket.syncId();
+    }
+
+    public static List<ItemStack> getInvContent(InventoryS2CPacket inventoryS2CPacket) {
+        return inventoryS2CPacket.contents();
+    }
+
+    public static VillagerProfession getVillagerProfession(VillagerEntity villager) {
+        return villager.getVillagerData().profession().value();
+    }
+
+    public static float movementForward(Input input) {
+        return input.getMovementInput().y;
+    }
+
+
+    public static float movementSideways(Input input) {
+        return input.getMovementInput().x;
+    }
+
+    public static void tagRollingEnchantment(NbtCompound tag, VillagerRoller.RollingEnchantment rolling) {
+        rolling.enchantment = Identifier.tryParse(tag.getString("enchantment", ""));
+        rolling.minLevel = tag.getInt("minLevel", 1);
+        rolling.maxCost = tag.getInt("maxCost", 64);
+        rolling.enabled = tag.getBoolean("enabled", true);
+    }
+    public  static Vec3d getEntityPos(Entity entity) {
+        return entity.getEntityPos();
+    }
+
+    public  static World getEntityWorld(Entity entity) {
+        return entity.getEntityWorld();
+    }
+
+    public  static String getGameProfileName(PlayerEntity entity) {
+        return entity.getGameProfile().name();
+    }
+
+    public static int getKeyEventKey(KeyEvent event) {
+        return event.key();
+    }
+}

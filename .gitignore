@@ -33,3 +33,5 @@ bin/
 run/
 tmp
 gradle-local.properties
+logs
+log

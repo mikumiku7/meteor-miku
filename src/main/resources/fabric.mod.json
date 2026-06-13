@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "meteor-miku",
+  "version": "${version}",
+  "name": "meteor-miku",
+  "description": "Meteor Client addon miku.",
+  "authors": [
+    "mikumiku"
+  ],
+  "contact": {
+    "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
+  },
+  "icon": "assets/meteor-miku/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "preLaunch": [
+      "com.github.mikumiku.addon.ok.PreLaunchInitializer"
+    ],
+    "meteor": [
+      "com.github.mikumiku.addon.ok.MikuMikuAddon"
+    ]
+  },
+  "mixins": [
+    "miku.mixins.json"
+  ],
+  "custom": {
+    "meteor-client:color": "225,25,25"
+  },
+  "depends": {
+    "java": ">=21",
+    "minecraft": [
+      "${mc_version}"
+    ],
+    "meteor-client": "*"
+  }
+}
