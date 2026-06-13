@@ -10,9 +10,9 @@
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.21.x%20~%201.21-green.svg?style=for-the-badge&logo=minecraft)
 ![Language](https://img.shields.io/badge/语言-中文-blue.svg?style=for-the-badge)
 
-## 声明
-
 ![scr.png](pic/scr.png)
+
+## 声明
 
 本插件主要是生存、建造辅助功能，PVP功能不优先考虑。
 
@@ -46,7 +46,7 @@
 ## ✨ 功能模块介绍
 
 不断添加新的模块中，你可以提出新功能的建议。目前的功能如下：
- 
+
 * **自动扔垃圾** - 根据两组独立列表与自定义延迟设置，自动丢弃背包中的指定物品。
 * **自动挖沙** - 通过 Baritone 自动寻找并挖掘沙子，同时集成工具维护、自动返回与潜影盒存储管理。
 * **自动使用物品** - 根据时间或血量与饥饿值阈值，按照优先级和自定义延迟自动使用指定物品。
@@ -76,6 +76,16 @@
     5.  提交一个 Pull Request。
 
 
+
+## 多版本编译构建
+
+运行 build-all.bat 即可一次性编译1.21.1 - 1.21.11 的jar
+
+CrossVersionCompat Via 跨版本代码实现
+
+
+
+
 ## 📄 许可证 (License)
 
 本项目采用 [GPL3](LICENSE) 开源许可。任何包含或修改该代码的衍生作品，都必须以相同的 GPLv3 许可证免费公开其全部源代码。
@@ -92,11 +102,7 @@
 
 https://anticope.pages.dev/addons/
 
-裤子条纹
-
 https://github.com/etianl/Trouser-Streak/releases
-
-jefff's mod
 
 https://github.com/miles352/meteor-stashhunting-addon/releases
 
@@ -116,5 +122,228 @@ https://github.com/KassuK1/BlackOut
 
 https://github.com/iM4dCat/Alien
 
+https://github.com/60124808866/OpenMyau
 
-CrossVersionCompat
+https://github.com/lambda-client/lambda
+
+https://github.com/CCBlueX/LiquidBounce
+
+https://github.com/srgantmoomoo/postman
+
+https://github.com/220814/Lemon-0.0.9-buildable
+
+https://github.com/SkidderMC/FDPClient
+
+https://github.com/ItziSpyder/ClickCrystals
+
+https://github.com/hax0r31337/ProtoHax
+
+https://github.com/ArsenicClient/Arsenic
+
+https://github.com/Aspw-w/NightX-Client
+
+https://github.com/cutepuppy73/enhance-client
+
+https://github.com/MeteorDevelopment/meteor-client
+
+https://github.com/ApertureStatic/KuraNG-Public-Edition
+
+https://github.com/BynBangsAlts/epitaph-crack
+
+https://github.com/ya-ilya/progreso
+
+https://github.com/TangyKiwi/KiwiClient
+
+https://github.com/ghluka/MedvedClient
+
+https://github.com/tranarchy/nicotine
+
+https://github.com/TrilliumSolutions/Epitaph
+
+https://github.com/SyutoBestCoder/Byte-1.21
+
+https://github.com/G8LOL/Artemis-Hacked-client
+
+https://github.com/lolwut2/Shoreline-V2
+
+https://github.com/cutepuppy73/oxium-client
+
+https://github.com/RageCat420/AlienClient-OpenSource
+
+https://github.com/tanishisherewithhh/Smp-hack
+
+https://github.com/DLindustries/System
+
+https://github.com/antidotxe/silkxd
+
+https://github.com/maththekid/fog-client
+
+https://github.com/4everdies/fogclient
+
+https://github.com/60124808866/OpenMyau
+
+https://github.com/NamiDevelopment/nami
+
+https://github.com/HopefulHorse453/OpenAstralis
+
+https://github.com/Logging4J/CurryMod
+
+https://github.com/PhilipPanda/Temple-Client
+
+https://github.com/tRollaURa/Caizm
+
+https://github.com/Zane2b2t/Grassware.win-rewrite
+
+https://github.com/doickswag/drughack
+
+https://github.com/MrHakan/Agalar-Hack
+
+https://github.com/TrilliumSolutions/198macros-v1.4.0
+
+https://github.com/sydney-client/Mint
+
+https://github.com/jntdevelopment/vegaline
+
+https://github.com/ScRichard/Gothaj-Next-Gen
+
+https://github.com/ScRichard/GOTHAJ_RECODE_UNRELEASED
+
+https://github.com/Nooniboi/Public-Ikea
+
+https://github.com/Dovyrn/JoblessClientSrc
+
+https://github.com/NoboKik/Achilles
+
+https://github.com/IMXNOOBX/FuFuClient
+
+https://github.com/Skitttyy/Sn0w
+
+https://github.com/LvStrnggg/argon
+
+https://github.com/wrrulosdev/mcpclient
+
+https://github.com/LuminaDevelopment/LuminaClient
+
+https://github.com/SpoonClient/Spoon
+
+https://github.com/levin1337/exosware-1.21.4
+
+https://github.com/Cypphi/kana-client
+
+https://github.com/lgsquen/PubDLC
+
+https://github.com/Gri11edHam/HamHacks
+
+https://github.com/Lwescool/phantom
+
+https://github.com/deadshxll/fusion
+
+https://github.com/qzqc/AsteraClient
+
+https://github.com/randomguy3725/MoonLight
+
+https://github.com/DGVPSH/SlackOpen
+
+https://github.com/Skitttyy/shoreline-client
+
+https://github.com/Snowiiii/MasterMind
+
+https://github.com/IUDevman/gamesense-client
+
+https://github.com/sydney-client/Sydney-Legacy
+
+https://github.com/AresClient/ares
+
+https://github.com/KamiSkidder/shgr-client
+
+https://github.com/WalmartSolutions/Dimasik
+
+https://github.com/shxp3/CrossSine
+
+https://github.com/smokedope2k16/polloshook-buildable
+
+https://github.com/OrangetteTeam/Orangette
+
+https://github.com/WalmartSolutions/Litka
+
+https://github.com/bluteest/trollgod.cc-deobf
+
+https://github.com/Nitaki-dev/Skidd.ed-Client
+
+https://github.com/MrsRina/onepop
+
+https://github.com/Atani-Client/client
+
+https://github.com/0mlml/korppu
+
+https://github.com/kawaiizenbo/MoonlightMeadows
+
+https://github.com/Lyzev/Schizoid
+
+https://github.com/Librry1337/Blessed-Client-1.16.5
+
+https://github.com/0xTas/oasis
+
+https://github.com/epsilonteam/Cursa
+
+https://github.com/Librry1337/Troxill-1.16.5-src
+
+https://github.com/VVriter/VydraHack
+
+https://github.com/HeliosDevelopement/HeliosClient
+
+https://github.com/WalmartSolutions/Virgins-4.4
+
+https://github.com/WalmartSolutions/Pulse-1.0.3
+
+https://github.com/0xFruzz/Extazyy-1.20.1
+
+https://github.com/pisun6666/shoreline-main
+
+https://github.com/pixelcmtd/CXClient
+
+https://github.com/WalmartSolutions/Virgins-1.5.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
